@@ -153,7 +153,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 <footer>
  <div id=fName>OG Book Cafe</div>
  <div class=socials><a id=fInsta href="#" target=_blank rel=noopener title=Instagram>◎</a><a id=fMaps href="#" target=_blank rel=noopener title=Directions>⌖</a></div>
- <div style="margin-top:14px;opacity:.7">© <span id=year></span> — built with the OG Book Cafe POS</div>
+ <div style="margin-top:14px;opacity:.7">© <span id=year></span> <span id=fName2>OG Book Cafe</span> — powered by <a href="https://auzlabs.com" target=_blank rel=noopener style="opacity:.9">AUZlabs</a></div>
 </footer>
 
 <div class=cartbar id=cartBar><span id=cartBarText></span><button id=cartBarBtn>Review order</button></div>
@@ -173,6 +173,7 @@ let M=null,tb=null;
  document.title=name;
  document.getElementById('navname').textContent=name;
  document.getElementById('fName').textContent=name;
+ document.getElementById('fName2').textContent=name;
  document.getElementById('kicker').textContent=name+' · '+(cfg.siteKicker||'Books & Brew');
  document.getElementById('heroTitle').innerHTML=esc(cfg.siteTag||'Quiet pages.').replace(/\n/g,'<br>')||'Quiet pages.<br>Warm cups.';
  if(cfg.siteTag)document.getElementById('heroTitle').innerHTML=esc(cfg.siteTag).split('\n').join('<br>');

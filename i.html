@@ -29,6 +29,7 @@ const id=new URLSearchParams(location.search).get('o');
 <table><thead><tr><th>Item</th><th class=c>Quantity</th><th class=r>Unit Price</th><th class=r>Total</th></tr></thead><tbody>${rows}</tbody></table>
 <div class=tot><div><b>Subtotal</b><span>${inr(t.sub)}</span></div>${t.d?`<div><b>Discount</b><span>-${inr(t.d)}</span></div>`:''}<div><b>CGST</b><span>${inr(t.tax/2)}</span></div><div><b>SGST</b><span>${inr(t.tax/2)}</span></div><div class=big><b>Total</b><b>${inr(t.total)}</b></div></div>
 <p class=thanks>${esc(s.ftr||'Thank you!')}</p>
-<div class=ft><div><b>PAID VIA</b><br>${(o.pays||[]).map(p=>p.m.toUpperCase()+': '+inr(p.amt)).join('<br>')||'—'}</div><div class=sig><b>${esc(s.name)}</b><br>${esc(s.addr)}${s.gstin?'<br>GSTIN '+esc(s.gstin):''}</div></div>`;
+<div class=ft><div><b>PAID VIA</b><br>${(o.pays||[]).map(p=>p.m.toUpperCase()+': '+inr(p.amt)).join('<br>')||'—'}</div><div class=sig><b>${esc(s.name)}</b><br>${esc(s.addr)}${s.gstin?'<br>GSTIN '+esc(s.gstin):''}</div></div>
+<div style="text-align:center;margin-top:24px;font-size:11px;color:#999">Powered by <a href="https://auzlabs.com" target=_blank rel=noopener style="color:#999">AUZlabs</a></div>`;
 })();
 </script></body></html>
