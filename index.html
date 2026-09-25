@@ -31,7 +31,7 @@ async function sync(){if(busy||!navigator.onLine||!S.user)return;busy=1;try{cons
  for(const r of data){if(await get('out',r.id)||(R[r.id]&&R[r.id].updated_at==r.updated_at))continue;R[r.id]=r;await put('rec',r);ch++}
  if(data.length)await put('meta',{k:'since',v:data[data.length-1].updated_at});if(ch)checkAlerts();if(ch&&!/INPUT|SELECT/.test(document.activeElement.tagName))render();if(data.length>=1000)setTimeout(sync,500)}catch(e){console.warn('sync',e)}busy=0;setNote()}
 /* money */
-function tot(o){const sub=r2(o.lines.reduce((a,l)=>a+l.price*l.qty,0)),d=o.disc?r2(Math.min(sub,o.disc.t=='%'?sub*o.disc.v/100:o.disc.v)):0,net=sub-d,rate=cfg().tax,tax=r2(net-net/(1+rate/100)),total=Math.round(net);return{sub,d,tax,round:r2(total-net),total}}
+function tot(o){const sub=r2(o.lines.reduce((a,l)=>a+l.price*l.qty,0)),d=o.disc?r2(Math.min(sub,o.disc.t=='%'?sub*o.disc.v/100:o.disc.v)):0,tax=r2((sub-d)*cfg().tax/100),ex=sub-d+tax,total=Math.round(ex);return{sub,d,tax,round:r2(total-ex),total}}
 function nextNo(){const n=(+localStorage.n||0)+1;localStorage.n=n;const d=localStorage.dev||(localStorage.dev=Math.random().toString(36).slice(2,4).toUpperCase());return cfg().prefix+'-'+d+'-'+String(n).padStart(4,'0')}
 const newOrder=()=>({id:uid(),type:'Dine-in',table:null,lines:[],status:'open',created:now(),by:S.user.id,cust:{}});
 async function persist(){const o=S.cur;if(!o.no)o.no=nextNo();o.t=tot(o);await save('order',o,o.id)}
@@ -68,7 +68,9 @@ function pickTable(id){const ex=L('order').find(x=>x.status=='open'&&x.table==id
 async function kot(){const o=S.cur;if(!o.lines.some(l=>l.qty>l.sent))return alert('Nothing new to send');if(!o.no)o.no=nextNo();const n=mk(o);await persist();prn(`<b>KOT ${o.no}</b><br>${o.type} ${esc(tn(o.table))}<br>${new Date().toLocaleTimeString()}<hr>`+n.map(x=>`<b>${x.q}× ${esc(x.n)}</b><br>`).join(''));render()}
 async function dedu(o){for(const l of o.lines){const it=R[l.id];if(!it||!it.data.rec)continue;for(const p of it.data.rec.split(',')){const[n,q]=p.split(':'),g=L('ing').find(x=>x.name.toLowerCase()==n.trim().toLowerCase());if(g&&+q){g.qty=r2(g.qty-q*l.qty);await save('ing',g,g.id)}}}}
 function pay(){const o=S.cur;if(!o.lines.length)return;if(!(o.cust.name||'').trim()||!(o.cust.phone||'').trim())return alert('Customer name and phone number are required before payment.');o.t=tot(o);const P=[],due=()=>r2(o.t.total-P.reduce((a,x)=>a+x.amt,0));
- const amt=h('input',{type:'number',value:o.t.total}),info=h('b'),list=h('div'),done=h('button',{class:'p',disabled:true,onclick:async()=>{o.pays=P;o.change=Math.max(-due(),0);o.status='paid';o.paidAt=now();await dedu(o);mk(o);await persist();x();prnInv(rcpt(o));S.cur=null;render()}},'Complete and print');
+ const amt=h('input',{type:'number',value:o.t.total}),info=h('b'),list=h('div'),done=h('button',{class:'p',disabled:true,onclick:async()=>{o.pays=P;o.change=Math.max(-due(),0);o.status='paid';o.paidAt=now();await dedu(o);mk(o);await persist();x();prnInv(rcpt(o));
+  const url=location.origin+'/i.html?o='+encodeURIComponent(o.no),cm=modal(h('h3',{},'Payment complete · '+inrc(o.t.total)),h('div',{class:'row'},h('button',{class:'p',onclick:()=>wa(o)},'Send bill'),h('button',{onclick:()=>open(url,'_blank')},'Open'),h('button',{onclick:()=>cm()},'Done')));
+  S.cur=null;render()}},'Complete and print');
  const up=()=>{list.replaceChildren(...P.map(p=>h('div',{class:'row'},p.m.toUpperCase(),inr(p.amt))));info.textContent=due()>0?'Due '+inr(due()):'Change to return '+inr(-due());amt.value=Math.max(due(),0);done.disabled=due()>0};
  const x=modal(h('h3',{},'Pay '+inr(o.t.total)),amt,h('div',{class:'row'},...['cash','upi','card'].map(m=>h('button',{onclick:()=>{let a=+amt.value;if(!(a>0))return;if(m!='cash')a=Math.min(a,due());if(a<=0)return;P.push({m,amt:a});up()}},m.toUpperCase()))),list,info,done);up()}
 V.pos=()=>{const o=S.cur||(S.cur=newOrder()),cats=L('cat').sort((a,b)=>a.n-b.n),q=S.q.toLowerCase(),t=tot(o);if(!cats.some(c=>c.id==S.cat))S.cat=cats[0]&&cats[0].id;
@@ -83,7 +85,7 @@ V.pos=()=>{const o=S.cur||(S.cur=newOrder()),cats=L('cat').sort((a,b)=>a.n-b.n),
   o.lines.length?null:h('p',{},'Tap an item to add it.'),
   h('div',{class:'row'},h('input',{placeholder:'Customer name *',style:'width:48%',value:o.cust.name||'',oninput:e=>o.cust.name=e.target.value}),h('input',{placeholder:'Phone *',style:'width:48%',value:o.cust.phone||'',oninput:e=>o.cust.phone=e.target.value})),
   h('div',{class:'row'},'Subtotal',inr(t.sub)),h('div',{class:'row'},h('span',{},'Discount ',can('m')?h('button',{onclick:()=>{const v=prompt('Discount, like 10% or 50');if(v==null)return;o.disc=v?{t:v.includes('%')?'%':'₹',v:parseFloat(v)||0}:null;render()}},'Set'):null),'-'+inr(t.d)),
-  h('div',{class:'row'},'GST '+cfg().tax+'% (included)',inr(t.tax)),h('div',{class:'row'},h('b',{},'Total'),h('b',{},inr(t.total))),
+  h('div',{class:'row'},'GST '+cfg().tax+'%',inr(t.tax)),h('div',{class:'row'},h('b',{},'Total'),h('b',{},inr(t.total))),
   h('div',{class:'row'},h('button',{onclick:kot,disabled:!o.lines.length},'Send to kitchen'),h('button',{onclick:async()=>{await persist();S.cur=null;render()},disabled:!o.lines.length},'Hold'),h('button',{class:'p',onclick:pay,disabled:!o.lines.length},'Pay')),
   h('button',{onclick:async()=>{if(o.no){if(!can('m'))return alert('Manager only');if(!confirm('Cancel saved order?'))return;o.status='void';await persist()}S.cur=null;render()}},'Clear order')))};
 V.tabs=()=>{const os=L('order').filter(o=>o.t).sort((a,b)=>b.created>a.created?1:-1),op=os.filter(o=>o.status=='open'&&o.lines.length);
