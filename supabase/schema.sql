@@ -11,8 +11,8 @@ create trigger t_touch before insert or update on records for each row execute f
 create policy p_read on profiles for select using(id=auth.uid() or me()='owner');
 create policy p_set on profiles for update using(me()='owner');
 create policy r_read on records for select using(me() is not null);
-create policy r_ins on records for insert with check(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner'));
-create policy r_upd on records for update using(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner')) with check(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner'));
+create policy r_ins on records for insert with check(me() is not null and (kind in('order','exp','shift','ing','waste','voidlog') or me()='owner'));
+create policy r_upd on records for update using(me() is not null and (kind in('order','exp','shift','ing','waste','voidlog') or me()='owner')) with check(me() is not null and (kind in('order','exp','shift','ing','waste','voidlog') or me()='owner'));
 alter publication supabase_realtime add table records;
 -- Promote a user:  update profiles set role='manager' where email='someone@example.com';
 
@@ -43,14 +43,51 @@ end;
 $$;
 grant execute on function place_order(text,text,text,text,jsonb) to anon;
 
--- Shareable invoice link (i.html?o=<invoice number>), e.g. for WhatsApp. Looked
--- up by the short invoice number rather than the order's internal id, for a
--- shorter URL.
+-- Shareable invoice link (i.html?o=<share token>), e.g. for WhatsApp. Looked up
+-- by a random unguessable per-order token (not the invoice number, which is
+-- short and sequential and must never double as a public lookup key).
 create function public_invoice(oid text) returns jsonb language sql security definer stable set search_path=public as $$
  select jsonb_build_object(
-  'order',(select data from records where kind='order' and not deleted and data->>'no'=oid order by (data->>'paidAt') desc nulls last limit 1),
+  'order',(select data from records where kind='order' and not deleted and data->>'tok'=oid order by (data->>'paidAt') desc nulls last limit 1),
   'cfg',coalesce((select data from records where id='settings'),'{}'::jsonb)
  )
 $$;
 grant execute on function public_invoice(text) to anon;
-create index if not exists records_order_no_idx on records(((data->>'no'))) where kind='order';
+create index if not exists records_order_tok_idx on records(((data->>'tok'))) where kind='order';
+
+-- Server-issued sequential invoice numbers (avoids per-device numbering,
+-- which could collide or gap). Falls back to a local number offline, marked
+-- with a trailing '~' and replaced by a real number once back online.
+create sequence if not exists invoice_seq start 1;
+create function next_invoice_no(prefix text) returns text language plpgsql security definer set search_path=public as $$
+declare n bigint; begin
+ if me() is null then raise exception 'not authorized'; end if;
+ n:=nextval('invoice_seq'); return prefix||'-'||lpad(n::text,6,'0');
+end $$;
+revoke execute on function next_invoice_no(text) from public;
+grant execute on function next_invoice_no(text) to authenticated;
+
+-- Conditional write with optimistic concurrency: rejects (rather than
+-- silently overwriting) a write whose `base` no longer matches the current
+-- server row, unless `force` is set. The client detects the conflict, makes
+-- the conflict visible to staff, then retries once with force=true so a
+-- record never gets stuck — this is best-effort conflict *visibility*, not
+-- full field-level merge.
+create function push_record(rid text, rkind text, rdata jsonb, rdeleted boolean, base timestamptz, force boolean default false) returns jsonb language plpgsql security definer set search_path=public as $$
+declare cur timestamptz; conflict boolean:=false; newv timestamptz;
+begin
+ if me() is null or not(rkind in('order','exp','shift','ing','waste','voidlog') or me()='owner') then
+   raise exception 'not authorized';
+ end if;
+ select updated_at into cur from records where id=rid;
+ if cur is null then
+   insert into records(id,kind,data,deleted) values(rid,rkind,rdata,rdeleted) returning updated_at into newv;
+ elsif force or base is null or cur=base then
+   update records set kind=rkind,data=rdata,deleted=rdeleted where id=rid returning updated_at into newv;
+ else
+   conflict:=true; newv:=cur;
+ end if;
+ return jsonb_build_object('ok', not conflict,'conflict',conflict,'server_updated_at',newv);
+end $$;
+revoke execute on function push_record(text,text,jsonb,boolean,timestamptz,boolean) from public;
+grant execute on function push_record(text,text,jsonb,boolean,timestamptz,boolean) to authenticated;
