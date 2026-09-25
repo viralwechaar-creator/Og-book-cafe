@@ -91,3 +91,12 @@ begin
 end $$;
 revoke execute on function push_record(text,text,jsonb,boolean,timestamptz,boolean) from public;
 grant execute on function push_record(text,text,jsonb,boolean,timestamptz,boolean) to authenticated;
+
+-- Public storage bucket for the customer-facing website (site.html): hero,
+-- about and gallery photos the owner uploads from Settings, compressed
+-- client-side before upload. Publicly readable, owner-only writes.
+insert into storage.buckets (id, name, public) values ('site','site', true) on conflict (id) do nothing;
+create policy site_public_read on storage.objects for select using (bucket_id='site');
+create policy site_owner_write on storage.objects for insert with check (bucket_id='site' and me()='owner');
+create policy site_owner_update on storage.objects for update using (bucket_id='site' and me()='owner') with check (bucket_id='site' and me()='owner');
+create policy site_owner_delete on storage.objects for delete using (bucket_id='site' and me()='owner');
