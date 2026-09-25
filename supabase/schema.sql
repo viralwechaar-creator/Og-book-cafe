@@ -42,3 +42,12 @@ begin
 end;
 $$;
 grant execute on function place_order(text,text,text,text,jsonb) to anon;
+
+-- Shareable invoice link (invoice.html?o=<order id>), e.g. for WhatsApp.
+create function public_invoice(oid text) returns jsonb language sql security definer stable set search_path=public as $$
+ select jsonb_build_object(
+  'order',(select data from records where id=oid and kind='order' and not deleted),
+  'cfg',coalesce((select data from records where id='settings'),'{}'::jsonb)
+ )
+$$;
+grant execute on function public_invoice(text) to anon;
