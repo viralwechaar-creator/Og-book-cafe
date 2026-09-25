@@ -11,7 +11,34 @@ create trigger t_touch before insert or update on records for each row execute f
 create policy p_read on profiles for select using(id=auth.uid() or me()='owner');
 create policy p_set on profiles for update using(me()='owner');
 create policy r_read on records for select using(me() is not null);
-create policy r_ins on records for insert with check(me() is not null and (kind in('order','exp') or me()='owner'));
-create policy r_upd on records for update using(me() is not null and (kind in('order','exp') or me()='owner')) with check(me() is not null and (kind in('order','exp') or me()='owner'));
+create policy r_ins on records for insert with check(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner'));
+create policy r_upd on records for update using(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner')) with check(me() is not null and (kind in('order','exp','shift','ing','waste') or me()='owner'));
 alter publication supabase_realtime add table records;
 -- Promote a user:  update profiles set role='manager' where email='someone@example.com';
+
+-- Self-order via table QR (order.html): guests place orders without logging in.
+create table guest_orders(id uuid primary key default gen_random_uuid(),tbl text not null,name text not null,phone text not null,note text,items jsonb not null,status text not null default 'new',created_at timestamptz not null default now());
+alter table guest_orders enable row level security;
+create policy g_read on guest_orders for select using(me() is not null);
+create policy g_upd on guest_orders for update using(me() is not null) with check(me() is not null);
+alter publication supabase_realtime add table guest_orders;
+
+create function public_menu() returns jsonb language sql security definer stable set search_path=public as $$
+ select jsonb_build_object(
+  'items',coalesce((select jsonb_agg(data) from records where kind='item' and not deleted),'[]'::jsonb),
+  'cats',coalesce((select jsonb_agg(data) from records where kind='cat' and not deleted),'[]'::jsonb),
+  'tables',coalesce((select jsonb_agg(data) from records where kind='table' and not deleted),'[]'::jsonb),
+  'cfg',coalesce((select data from records where id='settings'),'{}'::jsonb)
+ )
+$$;
+grant execute on function public_menu() to anon;
+
+create function place_order(t text,n text,p text,nt text,its jsonb) returns void language plpgsql security definer set search_path=public as $$
+declare cnt int;
+begin
+ select count(*) into cnt from guest_orders where tbl=t and status='new' and created_at>now()-interval '30 minutes';
+ if cnt>=5 then raise exception 'busy: too many pending orders for this table'; end if;
+ insert into guest_orders(tbl,name,phone,note,items) values(t,n,p,nt,its);
+end;
+$$;
+grant execute on function place_order(text,text,text,text,jsonb) to anon;
