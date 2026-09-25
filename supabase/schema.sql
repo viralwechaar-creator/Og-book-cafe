@@ -100,3 +100,54 @@ create policy site_public_read on storage.objects for select using (bucket_id='s
 create policy site_owner_write on storage.objects for insert with check (bucket_id='site' and me()='owner');
 create policy site_owner_update on storage.objects for update using (bucket_id='site' and me()='owner') with check (bucket_id='site' and me()='owner');
 create policy site_owner_delete on storage.objects for delete using (bucket_id='site' and me()='owner');
+
+-- Web Push: lets a device get an order alert even when the app/browser is
+-- fully closed, via the OS notification system rather than Realtime (which
+-- only works while a tab/PWA is actually running). Each staff device that
+-- taps "Enable notifications" (Staff tab) stores its push subscription here;
+-- a trigger on new/ready orders (and new self-orders) calls the deployed
+-- `send-push` Edge Function, which signs and delivers the push to every
+-- subscribed device. The Edge Function holds the VAPID key pair and a
+-- shared secret the trigger must present (it has verify_jwt off, since a
+-- DB trigger can't carry a user JWT) — see supabase/functions/send-push.
+create extension if not exists pg_net;
+
+create table push_subs(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users on delete cascade,endpoint text unique not null,p256dh text not null,auth text not null,created_at timestamptz not null default now());
+alter table push_subs enable row level security;
+create policy ps_ins on push_subs for insert with check(me() is not null and user_id=auth.uid());
+create policy ps_read on push_subs for select using(me() is not null and user_id=auth.uid());
+create policy ps_upd on push_subs for update using(me() is not null and user_id=auth.uid()) with check(me() is not null and user_id=auth.uid());
+create policy ps_del on push_subs for delete using(me() is not null and user_id=auth.uid());
+
+create function notify_push(title text, body text) returns void language sql as $$
+ select net.http_post(
+  url:='https://turweopxvskqmbzpblkm.supabase.co/functions/v1/send-push',
+  headers:=jsonb_build_object('Content-Type','application/json','x-trigger-secret','ce341201e148ab63e776da0fbdb63ebfe30368d241f27ac4'),
+  body:=jsonb_build_object('title',title,'body',body)
+ )
+$$;
+
+create function notify_order_change() returns trigger language plpgsql as $$
+declare kstat_old text; kstat_new text;
+begin
+ if NEW.kind<>'order' or NEW.deleted then return NEW; end if;
+ kstat_new:=NEW.data->>'kstat';
+ kstat_old:=case when TG_OP='UPDATE' then OLD.data->>'kstat' else null end;
+ if kstat_new is distinct from kstat_old and kstat_new in('new','ready') then
+  perform notify_push(
+   case kstat_new when 'new' then 'New order' else 'Order ready' end,
+   coalesce(NEW.data->>'no','Order')||' · '||coalesce(NEW.data->'cust'->>'name','')
+  );
+ end if;
+ return NEW;
+end $$;
+create trigger t_notify_order after insert or update on records for each row execute function notify_order_change();
+
+create function notify_guest_order() returns trigger language plpgsql as $$
+begin
+ if NEW.status='new' then
+  perform notify_push('New self-order', coalesce(NEW.name,'A guest')||' via table QR');
+ end if;
+ return NEW;
+end $$;
+create trigger t_notify_guest after insert on guest_orders for each row execute function notify_guest_order();

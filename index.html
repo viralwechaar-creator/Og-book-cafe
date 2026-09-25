@@ -11,6 +11,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:5px;border-bottom:1px so
 <script src=https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin=anonymous></script>
 <script src=/config.js></script>
 <script>
+const VAPID_PUBLIC='BN_aBfhAkcWmYJ8RArUKpcXFBId6rUsNO7bAuhyPr4To51XeATMoWY-8NxtJMCG_iHm4O4UbhV_EZnxloXkEMe4';
 const C=window.CFG||{},sb=supabase.createClient(C.url,C.key),S={tab:'pos',type:'Dine-in',cur:null,role:'cashier',q:'',d:new Date().toLocaleDateString('en-CA'),authExpired:false},R={},V={};let busy=0,conflicts=0,syncErr=0;
 const $=s=>document.querySelector(s),uid=()=>crypto.randomUUID(),tok=()=>crypto.randomUUID().replace(/-/g,'').slice(0,12),now=()=>new Date().toISOString(),r2=n=>Math.round(n*100)/100,inr=n=>'₹'+r2(n),inrc=n=>'₹'+r2(n).toLocaleString('en-IN');
 const fmtDate=d=>{const t=new Date(d);return t.toLocaleDateString('en-US',{weekday:'short'})+', '+t.getDate()+' '+t.toLocaleDateString('en-US',{month:'short'})+' '+t.getFullYear()};
@@ -27,6 +28,18 @@ async function setNote(){const n=(await all('out')).length,e=$('#net');if(e)e.te
 let seenNew=new Set(),seenReady=new Set();
 function alertSound(n=3){try{const a=new(window.AudioContext||window.webkitAudioContext)();for(let i=0;i<n;i++){const o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=880;o.connect(g);g.connect(a.destination);g.gain.value=0.001;const t=a.currentTime+i*0.45;g.gain.exponentialRampToValueAtTime(0.6,t+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+0.35);o.start(t);o.stop(t+0.36)}}catch{}try{navigator.vibrate&&navigator.vibrate([200,100,200,100,200])}catch{}}
 function checkAlerts(){for(const o of L('order')){if(o.status=='void')continue;if(o.kstat=='new'){if(!seenNew.has(o.id)){seenNew.add(o.id);alertSound(3)}}else seenNew.delete(o.id);if(o.kstat=='ready'){if(!seenReady.has(o.id)){seenReady.add(o.id);alertSound(4)}}else seenReady.delete(o.id)}}
+function b64ToArr(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+async function enablePush(){
+ if(!('serviceWorker' in navigator)||!('PushManager' in window))return alert('Push notifications are not supported on this browser/device.');
+ const perm=await Notification.requestPermission();if(perm!=='granted')return alert('Notification permission was not granted.');
+ const reg=await navigator.serviceWorker.ready;
+ let sub=await reg.pushManager.getSubscription();
+ if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToArr(VAPID_PUBLIC)});
+ const j=sub.toJSON();
+ const{error}=await sb.from('push_subs').upsert({user_id:S.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'});
+ if(error)return alert('Could not save this device: '+error.message);
+ alert('Notifications enabled on this device — you\'ll get an alert even if the app is closed.');
+}
 function forceRelogin(msg){S.user=null;S.authExpired=false;localStorage.removeItem('u');login(msg)}
 async function doSync(){if(busy||!navigator.onLine||!S.user)return;busy=1;try{
  const{data:{session}}=await sb.auth.getSession();if(!session){busy=0;return forceRelogin('Your session ended. Please sign in again.')}
@@ -153,7 +166,7 @@ V.inv=()=>{const nm=h('input',{placeholder:'Ingredient'}),un=h('input',{placehol
 return h('div',{class:'g',style:'grid-template-columns:1fr'},h('div',{class:'card'},h('h3',{},'Inventory (linked to item recipes in Menu)'),can('m')?h('div',{class:'row'},nm,un,q,lo,h('button',{class:'p',onclick:async()=>{if(!nm.value)return;await save('ing',{name:nm.value,unit:un.value,qty:+q.value||0,low:+lo.value||0});render()}},'Add')):null,...L('ing').map(g=>h('div',{class:'row',style:g.qty<=g.low?'color:#b00020':''},g.name+' '+g.qty+' '+g.unit+(g.qty<=g.low?' ⚠ low':''),can('m')?h('span',{},h('button',{onclick:async()=>{const v=+prompt('Add stock (+) or remove (−)');if(v){g.qty=r2(g.qty+v);await save('ing',g,g.id)}render()}},'± Stock'),h('button',{onclick:async()=>{const v=+prompt('Wasted quantity');if(v>0){g.qty=r2(g.qty-v);await save('ing',g,g.id);await save('waste',{ing:g.name,q:v,d:S.d})}render()}},'Waste')):null))),h('div',{class:'card'},h('h3',{},'Wastage log'),...L('waste').slice(-20).reverse().map(w=>h('div',{class:'row'},w.d+' · '+w.ing,w.q))))};
 V.staff=()=>{const b=h('div',{class:'card'},h('h3',{},'Staff & roles')),sh=L('shift').sort((a,b)=>b.in>a.in?1:-1),mine=sh.find(x=>x.u==S.user.id&&!x.out);
 sb.from('profiles').select('id,email,role').then(({data})=>(data||[]).forEach(p=>b.append(h('div',{class:'row'},p.email,can('o')?h('select',{onchange:e=>sb.from('profiles').update({role:e.target.value}).eq('id',p.id)},...['cashier','manager','owner'].map(r=>h('option',{selected:p.role==r},r))):p.role))));
-return h('div',{class:'g',style:'grid-template-columns:1fr'},h('div',{class:'card'},h('h3',{},'Attendance'),h('button',{class:'p',onclick:async()=>{if(mine){mine.out=now();await save('shift',mine,mine.id)}else await save('shift',{u:S.user.id,e:S.user.email||'me',in:now()});render()}},mine?'Clock out':'Clock in'),...sh.slice(0,30).map(x=>h('div',{class:'row'},(x.e||'')+' '+new Date(x.in).toLocaleString(),x.out?Math.round((new Date(x.out)-new Date(x.in))/6e4)+' min':'on shift'))),b)};
+return h('div',{class:'g',style:'grid-template-columns:1fr'},h('div',{class:'card'},h('h3',{},'Attendance'),h('button',{class:'p',onclick:async()=>{if(mine){mine.out=now();await save('shift',mine,mine.id)}else await save('shift',{u:S.user.id,e:S.user.email||'me',in:now()});render()}},mine?'Clock out':'Clock in'),...sh.slice(0,30).map(x=>h('div',{class:'row'},(x.e||'')+' '+new Date(x.in).toLocaleString(),x.out?Math.round((new Date(x.out)-new Date(x.in))/6e4)+' min':'on shift')),h('h3',{},'Notifications'),h('p',{style:'font-size:13px;color:#666'},'Get an order alert on this device even when the app is closed.'),h('button',{class:'p',onclick:enablePush},'Enable notifications on this device')),b)};
 V.crm=()=>{const paid=L('order').filter(o=>o.status=='paid'&&(o.cust||{}).phone),cs={};paid.forEach(o=>{const p=o.cust.phone.replace(/\D/g,'');const c=cs[p]||(cs[p]={name:o.cust.name,phone:p,n:0,tot:0,last:o.paidAt});c.n++;c.tot=r2(c.tot+o.t.total);if(o.paidAt>c.last)c.last=o.paidAt});
 const list=Object.values(cs).sort((a,b)=>b.tot-a.tot);
 return h('div',{class:'g',style:'grid-template-columns:1fr'},h('div',{class:'card'},h('h3',{},'Customers ('+list.length+')'),...list.map(c=>h('div',{class:'row'},(c.name||'')+' · '+c.phone,c.n+' visit'+(c.n>1?'s':'')+' · '+inr(c.tot)+' · last '+new Date(c.last).toLocaleDateString()))),list.length?null:h('p',{},'No paid orders with a customer phone yet.'))};
