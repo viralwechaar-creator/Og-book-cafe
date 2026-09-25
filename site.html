@@ -71,12 +71,28 @@ p.lead{font-size:19px;color:#4a4638;white-space:pre-line}
 footer{text-align:center;padding:40px 20px;font-size:13px;color:#7a7561}
 footer .socials{display:flex;gap:14px;justify-content:center;margin-top:14px}
 footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-decoration:none}
+/* ordering */
+.tbanner{background:var(--ink);color:#f2efe6;text-align:center;padding:10px;font-size:13px;letter-spacing:.03em}
+.mcard .variant{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.mcard .variant:first-of-type{border-top:none;margin-top:6px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stepper button:disabled{opacity:.3;cursor:default}
+.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);color:#fff;padding:14px 20px;display:none;align-items:center;justify-content:space-between;box-shadow:0 -14px 30px -14px rgba(0,0,0,.4)}
+.cartbar button{background:#fff;color:var(--ink);border:none;padding:10px 20px;border-radius:100px;font:13px/1 Inter,sans-serif;font-weight:600;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.sheet-ov{position:fixed;inset:0;background:rgba(20,18,14,.5);z-index:70;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--paper);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:24px;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
+.sheet h3{font-family:Fraunces,serif;font-weight:500;margin:0 0 14px}
+.sheet input,.sheet textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:10px;background:#fff}
+.sheet .cta{border:none;width:100%;text-align:center;cursor:pointer;font:inherit;font-weight:600}
+.sline{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
 </style></head><body>
 <header><nav>
  <a class=brand href=#top><img id=navlogo src=/logo.png alt=""><span id=navname>OG Book Cafe</span></a>
  <a class=link href=#about>About</a><a class=link href=#menu>Menu</a><a class=link href=#gallery>Gallery</a><a class=link href=#visit>Visit</a>
  <a class=cta id=orderCta href="https://wa.me/" target=_blank rel=noopener>Order on WhatsApp</a>
 </nav></header>
+<div id=tbanner class=tbanner style="display:none"></div>
 
 <div id=top></div>
 <section class=hero>
@@ -140,16 +156,19 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
  <div style="margin-top:14px;opacity:.7">© <span id=year></span> — built with the OG Book Cafe POS</div>
 </footer>
 
+<div class=cartbar id=cartBar><span id=cartBarText></span><button id=cartBarBtn>Review order</button></div>
 <script src=https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin=anonymous></script>
 <script src=/config.js></script>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'),inr=n=>'₹'+Math.round(n*100)/100;
 const waLink=(phone,text)=>{let p=(phone||'').replace(/\D/g,'');if(p.length==10)p='91'+p;return 'https://wa.me/'+(p||'')+(text?'?text='+encodeURIComponent(text):'')};
+const sb=supabase.createClient(CFG.url,CFG.key),T=new URLSearchParams(location.search).get('t'),cart={};
+let M=null,tb=null;
 (async()=>{
- let M=null;
- try{const sb=supabase.createClient(CFG.url,CFG.key);const{data}=await sb.rpc('public_menu');M=data}catch(e){console.warn(e)}
+ try{const{data}=await sb.rpc('public_menu');M=data}catch(e){console.warn(e)}
  const cfg=(M&&M.cfg)||{};
+ if(T){tb=(M&&M.tables||[]).find(x=>x.id==T);const bEl=document.getElementById('tbanner');bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.'}
  const name=cfg.name||'OG Book Cafe';
  document.title=name;
  document.getElementById('navname').textContent=name;
@@ -178,16 +197,44 @@ const waLink=(phone,text)=>{let p=(phone||'').replace(/\D/g,'');if(p.length==10)
  const cats=(M&&M.cats||[]).slice().sort((a,b)=>a.n-b.n),items=(M&&M.items||[]).filter(i=>!i.off);
  const tabsEl=document.getElementById('menuTabs'),gridEl=document.getElementById('menuGrid');
  let active=cats[0]&&cats[0].id;
+ const priceOf=k=>{const j=k.indexOf('|'),i=items.find(x=>x.id==k.slice(0,j)),sz=k.slice(j+1),s=sz&&(i.sizes||[]).find(x=>x.l==sz);return[i,sz,s?s.p:i.price]};
+ const cartTotal=()=>{let n=0,t=0;for(const k in cart){t+=priceOf(k)[2]*cart[k].q;n+=cart[k].q}return{n,t}};
+ function chg(k,d){const[i,sz,p]=priceOf(k),c=cart[k]||(cart[k]={id:i.id,size:sz,q:0});c.q=Math.max(0,c.q+d);if(!c.q)delete cart[k];drawMenu();drawCartBar()}
+ function drawCartBar(){const{n,t}=cartTotal(),bar=document.getElementById('cartBar');if(!tb||!n){bar.style.display='none';return}bar.style.display='flex';document.getElementById('cartBarText').textContent=n+' item'+(n>1?'s':'')+' · '+inr(t)}
  function drawMenu(){
   tabsEl.innerHTML='';cats.forEach(c=>{const b=document.createElement('button');b.textContent=c.name;if(c.id==active)b.className='on';b.onclick=()=>{active=c.id;drawMenu()};tabsEl.append(b)});
   gridEl.innerHTML='';items.filter(i=>i.cat==active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(i=>{
-   const price=i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price);
-   const c=document.createElement('div');c.className='mcard';c.innerHTML='<div class=row><b>'+esc(i.name)+'</b><span class=price>'+esc(price)+'</span></div>';
+   const c=document.createElement('div');c.className='mcard';
+   if(tb){
+    const variants=i.sizes&&i.sizes.length?i.sizes.map(s=>[s.l,s.p]):[['',i.price]];
+    c.innerHTML='<b>'+esc(i.name)+'</b>'+variants.map(([sz,p])=>{const k=i.id+'|'+sz,q=(cart[k]||{}).q||0;return '<div class=variant><span>'+(sz?esc(sz)+' — ':'')+inr(p)+'</span><div class=stepper><button data-k="'+esc(k)+'" data-d=-1>−</button><b>'+q+'</b><button data-k="'+esc(k)+'" data-d=1>+</button></div></div>'}).join('');
+    c.querySelectorAll('button').forEach(b=>b.onclick=()=>chg(b.dataset.k,+b.dataset.d));
+   }else{
+    const price=i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price);
+    c.innerHTML='<div class=row><b>'+esc(i.name)+'</b><span class=price>'+esc(price)+'</span></div>';
+   }
    gridEl.append(c)
   });
   if(!items.filter(i=>i.cat==active).length)gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
  }
  if(cats.length)drawMenu();else gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
+ document.getElementById('cartBarBtn').onclick=openCheckout;
+ function openCheckout(){
+  const{t}=cartTotal(),ov=document.createElement('div');ov.className='sheet-ov';ov.onclick=e=>{if(e.target===ov)ov.remove()};
+  const rows=Object.keys(cart).map(k=>{const[i,sz,p]=priceOf(k);return '<div class=sline><span>'+cart[k].q+'× '+esc(i.name)+(sz?' ('+esc(sz)+')':'')+'</span><span>'+inr(p*cart[k].q)+'</span></div>'}).join('');
+  ov.innerHTML='<div class=sheet><h3>Your order · '+esc(tb.name)+'</h3>'+rows+'<div class=sline style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><b>Estimated total</b><b>'+inr(t)+'</b></div><input id=coName placeholder="Your name *"><input id=coPhone type=tel placeholder="Mobile number *"><textarea id=coNote placeholder="Notes (e.g. less spicy, no onion)" rows=2></textarea><button class="cta" id=coGo style="margin-top:4px">Place order</button><button style="background:none;border:none;width:100%;padding:10px;color:#8a8577;cursor:pointer" id=coBack>Back</button></div>';
+  document.body.append(ov);
+  ov.querySelector('#coBack').onclick=()=>ov.remove();
+  ov.querySelector('#coGo').onclick=async e=>{
+   const n=ov.querySelector('#coName').value.trim(),p=ov.querySelector('#coPhone').value.trim();
+   if(!n)return alert('Please enter your name');if(!p)return alert('Please enter your mobile number');
+   e.target.disabled=true;e.target.textContent='Placing order…';
+   const{error}=await sb.rpc('place_order',{t:T,n,p,nt:ov.querySelector('#coNote').value.trim(),its:Object.values(cart).map(c=>({id:c.id,size:c.size,qty:c.q}))});
+   if(error){e.target.disabled=false;e.target.textContent='Place order';return alert(/busy/.test(error.message)?'Too many pending orders for this table. Please call our staff.':'Could not place the order. Please try again or call our staff.')}
+   for(const k in cart)delete cart[k];ov.remove();drawMenu();drawCartBar();
+   const ok=document.createElement('div');ok.className='sheet-ov';ok.innerHTML='<div class=sheet style="text-align:center"><h3>✅ Order sent!</h3><p>Thank you '+esc(n)+'. Our staff will confirm it shortly.</p><button class=cta id=okClose>Order more</button></div>';document.body.append(ok);ok.onclick=e=>{if(e.target===ok||e.target.id=='okClose')ok.remove()}
+  };
+ }
  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 })();
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target)}}),{threshold:.15});
