@@ -15,7 +15,7 @@ const fmtDate=d=>{const t=new Date(d);return t.toLocaleDateString('en-US',{weekd
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const h=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){const v=a[x];if(v==null||v===false)continue;x.startsWith('on')?e[x]=v:x=='class'?e.className=v:e.setAttribute(x,v)}e.append(...k.flat().filter(x=>x!=null&&x!==false));return e};
 const L=k=>Object.values(R).filter(r=>r.kind==k&&!r.deleted).map(r=>r.data),tn=id=>{const t=R[id];return t&&!t.deleted?t.data.name:''};
-const cfg=()=>({name:'My Restaurant',addr:'',phone:'',gstin:'',tax:5,prefix:'INV',col:'#1f3d2e',logo:'',ftr:'Thank you!',w:80,sty:'mono',fs:12,gw:'Scan, order and relax. Your order goes straight to our kitchen.',...(R.settings&&R.settings.data)}),can=x=>S.role=='owner'||(x=='m'&&S.role=='manager');
+const cfg=()=>({name:'My Restaurant',addr:'',phone:'',gstin:'',tax:5,prefix:'INV',col:'#1f3d2e',logo:'/logo.png',ftr:'Thank you!',w:80,sty:'mono',fs:12,gw:'Scan, order and relax. Your order goes straight to our kitchen.',...(R.settings&&R.settings.data)}),can=x=>S.role=='owner'||(x=='m'&&S.role=='manager');
 /* local store: rec = every record, out = unsent changes (keyed by id, latest wins, never dropped) */
 const idb=new Promise(r=>{const q=indexedDB.open('pos2',1);q.onupgradeneeded=()=>['rec','out','meta'].forEach(s=>q.result.createObjectStore(s,{keyPath:s=='meta'?'k':'id'}));q.onsuccess=()=>r(q.result)});
 const tx=async(s,m,f)=>{const d=await idb;return new Promise((res,rej)=>{const t=d.transaction(s,m),q=f(t.objectStore(s));t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)})};
@@ -39,13 +39,13 @@ function mk(o){const n=o.lines.filter(l=>l.qty>l.sent).map(l=>({n:l.name+(l.size
 /* printing (80mm friendly) + whatsapp */
 function prn(html){const c=cfg(),f=h('iframe',{style:'position:fixed;width:0;height:0;border:0'});document.body.append(f);const d=f.contentDocument;d.write('<style>body{font:'+(c.fs||12)+'px '+(c.sty=='sans'?'system-ui,sans-serif':'monospace')+';width:'+(c.w==58?48:72)+'mm;margin:0}td{padding:1px 0}.r{text-align:right}img{max-width:100%}</style>'+html);d.close();f.contentWindow.focus();f.contentWindow.print();setTimeout(()=>f.remove(),3000)}
 function prnInv(html){const f=h('iframe',{style:'position:fixed;width:0;height:0;border:0'});document.body.append(f);const d=f.contentDocument;d.write(`<style>
-@page{margin:16mm}body{font-family:Georgia,'Times New Roman',serif;color:#111;margin:0;padding:6mm;max-width:700px}
-.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.mark img{max-height:52px}.mark{font-size:34px;font-weight:bold}.ttl{font-size:32px;letter-spacing:3px}
-.meta{display:flex;justify-content:space-between;margin-bottom:18px;font-size:14px}.meta .r{text-align:right}
-table{width:100%;border-collapse:collapse;margin:14px 0}th,td{padding:9px 4px;text-align:left;border-bottom:1px solid #ccc;font-size:14px}th{font-size:13px}th.c,td.c{text-align:center}th.r,td.r{text-align:right}
-.tot{display:grid;justify-content:end;margin-top:6px}.tot div{display:grid;grid-template-columns:140px 100px;gap:20px;padding:3px 0;font-size:14px}.tot div b:first-child{font-weight:600}.tot .big{font-size:20px;border-top:1px solid #111;margin-top:6px;padding-top:8px}
-.thanks{font-size:26px;margin:36px 0 40px}
-.ft{display:flex;justify-content:space-between;font-size:13px}.sig{text-align:right;font-style:italic}
+@page{margin:16mm}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111;margin:0;padding:6mm;max-width:700px}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.mark img{max-height:48px}.mark{font-size:22px;font-weight:700}.ttl{font-size:22px;letter-spacing:2px;font-weight:700;color:#555}
+.meta{display:flex;justify-content:space-between;margin-bottom:18px;font-size:13px;color:#333}.meta .r{text-align:right}
+table{width:100%;border-collapse:collapse;margin:14px 0}th,td{padding:8px 4px;text-align:left;border-bottom:1px solid #ddd;font-size:13px}th{font-size:12px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px}th.c,td.c{text-align:center}th.r,td.r{text-align:right}
+.tot{display:grid;justify-content:end;margin-top:6px}.tot div{display:grid;grid-template-columns:140px 100px;gap:20px;padding:3px 0;font-size:13px;color:#333}.tot div b:first-child{font-weight:600;color:#111}.tot .big{font-size:17px;border-top:1px solid #111;margin-top:6px;padding-top:8px;color:#111}
+.thanks{font-size:18px;margin:32px 0 36px;color:#111}
+.ft{display:flex;justify-content:space-between;font-size:12px;color:#444}.sig{text-align:right}
 </style>`+html);d.close();f.contentWindow.focus();f.contentWindow.print();setTimeout(()=>f.remove(),3000)}
 function rcpt(o){const s=cfg(),t=o.t;const rows=o.lines.map(l=>`<tr><td>${esc(l.name)}${l.size?' ('+esc(l.size)+')':''}</td><td class=c>${l.qty}</td><td class=r>${inrc(l.price)}</td><td class=r>${inrc(l.price*l.qty)}</td></tr>`).join('');
 return `<div class=hd><div class=mark>${s.logo?'<img src="'+esc(s.logo)+'">':esc((s.name||'?').charAt(0))}</div><div class=ttl>INVOICE</div></div>
@@ -55,7 +55,7 @@ return `<div class=hd><div class=mark>${s.logo?'<img src="'+esc(s.logo)+'">':esc
 <p class=thanks>${esc(s.ftr)}</p>
 <div class=ft><div><b>PAID VIA</b><br>${(o.pays||[]).map(p=>p.m.toUpperCase()+': '+inrc(p.amt)).join('<br>')||'—'}</div><div class=sig><b>${esc(s.name)}</b><br>${esc(s.addr)}${s.gstin?'<br>GSTIN '+esc(s.gstin):''}</div></div>`}
 function wa(o){let p=((o.cust||{}).phone||prompt('Customer phone')||'').replace(/\D/g,'');if(!p)return;if(p.length==10)p='91'+p;
- const url=location.origin+'/invoice.html?o='+o.id,items=o.lines.map(l=>`${l.name}${l.size?' ('+l.size+')':''}: ${inrc(l.price*l.qty)}`).join('\n');
+ const url=location.origin+'/i.html?o='+encodeURIComponent(o.no),items=o.lines.map(l=>`${l.name}${l.size?' ('+l.size+')':''}: ${inrc(l.price*l.qty)}`).join('\n');
  const msg=`Hi ${(o.cust||{}).name||''}, thank you for visiting ${cfg().name}.\n\nInvoice ${o.no} (${fmtDate(o.paidAt||o.created)})\n${items}\nTotal: ${inrc(o.t.total)}\n\nView or download your invoice:\n${url}`;
  open('https://wa.me/'+p+'?text='+encodeURIComponent(msg),'_blank')}
 function modal(...k){const o=h('div',{class:'ov',onclick:e=>e.target==o&&o.remove()},h('div',{class:'md'},...k));document.body.append(o);return()=>o.remove()}
