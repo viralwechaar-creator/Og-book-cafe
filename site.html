@@ -56,6 +56,10 @@ p.lead{font-size:19px;color:#4a4638;white-space:pre-line}
 .mcard .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .mcard b{font-family:Fraunces,serif;font-size:18px;font-weight:500}
 .mcard .price{color:var(--olive-dk);font-weight:600;white-space:nowrap}
+.mcard .top{display:flex;gap:12px;align-items:flex-start}
+.mcard .icon{flex:none;width:38px;height:38px}
+.mcard .icon svg{width:100%;height:100%}
+.mcard .desc{font-size:13px;color:#8a8577;margin:4px 0 0;line-height:1.5}
 /* gallery */
 .gal{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media(min-width:700px){.gal{grid-template-columns:repeat(4,1fr)}}
@@ -272,17 +276,26 @@ let M=null,tb=null;
   nameEl.value='';qtyEl.value=1;nameEl.focus();
   drawCustom();drawCartBar();
  };
+ const DOODLES={
+  tea:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M25 45h42l-4 30a6 6 0 0 1-6 5H35a6 6 0 0 1-6-5L25 45Z" stroke="#5f6d4f" stroke-width=3/><path d="M67 50h6a10 10 0 0 1 0 20h-4" stroke="#5f6d4f" stroke-width=3/><path d="M38 38c-2-6 3-8 2-14M50 38c-2-7 4-9 2-15M62 38c-2-6 3-8 2-14" stroke="#5f6d4f" stroke-width=3 stroke-linecap=round/><ellipse cx=46 cy=45 rx=21 ry=4 stroke="#5f6d4f" stroke-width=2/></svg>',
+  coffee:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M28 40h38l-5 38a6 6 0 0 1-6 5H39a6 6 0 0 1-6-5L28 40Z" stroke="#5f6d4f" stroke-width=3/><path d="M66 45h7a11 11 0 0 1 0 22h-5" stroke="#5f6d4f" stroke-width=3/><path d="M40 34c-2-7 4-9 2-16M52 34c-2-8 4-10 2-17" stroke="#5f6d4f" stroke-width=3 stroke-linecap=round/></svg>',
+  pastry:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M20 55c0-16 30-30 30-30s30 14 30 30" stroke="#5f6d4f" stroke-width=3/><path d="M18 55h64M24 55l4 15a6 6 0 0 0 6 5h32a6 6 0 0 0 6-5l4-15" stroke="#5f6d4f" stroke-width=3/><path d="M40 40c4 4 16 4 20 0" stroke="#5f6d4f" stroke-width=2/></svg>',
+  cold:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M32 25h36l-5 55a6 6 0 0 1-6 5H43a6 6 0 0 1-6-5l-5-55Z" stroke="#5f6d4f" stroke-width=3/><path d="M30 25h40M45 25v60M55 40l-10 8M55 55l-10 8" stroke="#5f6d4f" stroke-width=2/><path d="M60 18c8 4 8 10 2 14" stroke="#5f6d4f" stroke-width=2 stroke-linecap=round/></svg>',
+  sandwich:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M15 55l35-25 35 25" stroke="#5f6d4f" stroke-width=3/><path d="M18 55h64l-6 20a6 6 0 0 1-6 4H30a6 6 0 0 1-6-4l-6-20Z" stroke="#5f6d4f" stroke-width=3/><path d="M28 55c4-4 8 4 12 0s8 4 12 0 8 4 12 0 8 4 12 0" stroke="#5f6d4f" stroke-width=2/></svg>',
+  book:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M20 25c0-3 2-5 5-5h20c3 0 5 2 5 5v50l-15-8-15 8V25Z" stroke="#5f6d4f" stroke-width=3/><path d="M50 25c0-3 2-5 5-5h20c3 0 5 2 5 5v50l-15-8-15 8V25Z" stroke="#5f6d4f" stroke-width=3/></svg>',
+ };
+ const iconFor=nm=>{const s=nm.toLowerCase();if(/tea|chai/.test(s))return DOODLES.tea;if(/coffee|latte|espresso|cappuccino|mocha|americano|cold\s*brew/.test(s))return DOODLES.coffee;if(/cake|pastry|croissant|muffin|cookie|brownie|donut|puff/.test(s))return DOODLES.pastry;if(/juice|shake|smoothie|iced|cold|soda|float/.test(s))return DOODLES.cold;if(/sandwich|toast|burger|wrap|panini|maggi|pasta/.test(s))return DOODLES.sandwich;if(/book|read/.test(s))return DOODLES.book;return DOODLES.coffee};
  function drawMenu(){
   tabsEl.innerHTML='';cats.forEach(c=>{const b=document.createElement('button');b.textContent=c.name;if(c.id==active)b.className='on';b.onclick=()=>{active=c.id;drawMenu()};tabsEl.append(b)});
   gridEl.innerHTML='';items.filter(i=>i.cat==active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(i=>{
    const c=document.createElement('div');c.className='mcard';
+   const head='<div class=top><div class=icon>'+iconFor(i.name)+'</div><div style="flex:1"><div class=row><b>'+esc(i.name)+'</b>'+(tb?'':'<span class=price>'+esc(i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price))+'</span>')+'</div>'+(i.desc?'<p class=desc>'+esc(i.desc)+'</p>':'')+'</div></div>';
    if(tb){
     const variants=i.sizes&&i.sizes.length?i.sizes.map(s=>[s.l,s.p]):[['',i.price]];
-    c.innerHTML='<b>'+esc(i.name)+'</b>'+variants.map(([sz,p])=>{const k=i.id+'|'+sz,q=(cart[k]||{}).q||0;return '<div class=variant><span>'+(sz?esc(sz)+' — ':'')+inr(p)+'</span><div class=stepper><button data-k="'+esc(k)+'" data-d=-1>−</button><b>'+q+'</b><button data-k="'+esc(k)+'" data-d=1>+</button></div></div>'}).join('');
+    c.innerHTML=head+variants.map(([sz,p])=>{const k=i.id+'|'+sz,q=(cart[k]||{}).q||0;return '<div class=variant><span>'+(sz?esc(sz)+' — ':'')+inr(p)+'</span><div class=stepper><button data-k="'+esc(k)+'" data-d=-1>−</button><b>'+q+'</b><button data-k="'+esc(k)+'" data-d=1>+</button></div></div>'}).join('');
     c.querySelectorAll('button').forEach(b=>b.onclick=()=>chg(b.dataset.k,+b.dataset.d));
    }else{
-    const price=i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price);
-    c.innerHTML='<div class=row><b>'+esc(i.name)+'</b><span class=price>'+esc(price)+'</span></div>';
+    c.innerHTML=head;
    }
    gridEl.append(c)
   });
