@@ -169,7 +169,12 @@ let M=null,tb=null;
 (async()=>{
  try{const{data}=await sb.rpc('public_menu');M=data}catch(e){console.warn(e)}
  const cfg=(M&&M.cfg)||{};
- if(T){tb=(M&&M.tables||[]).find(x=>x.id==T);const bEl=document.getElementById('tbanner');bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.'}
+ const bEl=document.getElementById('tbanner');
+ if(cfg.closed){
+  bEl.style.display='block';bEl.style.background='#2a2822';bEl.textContent='🚪 '+(cfg.closedMsg||"We're closed right now — please check back soon.");
+ }else if(T){
+  tb=(M&&M.tables||[]).find(x=>x.id==T);bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.';
+ }
  const name=cfg.name||'OG Book Cafe';
  document.title=name;
  document.getElementById('navname').textContent=name;
@@ -187,6 +192,7 @@ let M=null,tb=null;
  if(cfg.logo){document.getElementById('navlogo').src=cfg.logo}
  const wa=waLink(cfg.phone,'Hi '+name+', I would like to place an order.');
  document.getElementById('orderCta').href=wa;document.getElementById('vWa').href=wa;
+ if(cfg.closed){document.getElementById('orderCta').style.display='none';document.getElementById('vWa').style.display='none'}
  if(cfg.siteHero){const im=document.getElementById('heroImg');im.src=cfg.siteHero;im.style.display='block';document.getElementById('heroFallback').style.display='none'}
  else{document.getElementById('heroFallback').innerHTML='<svg width=40% viewBox="0 0 200 200" fill=none xmlns=http://www.w3.org/2000/svg><path d="M50 90c0-30 22-46 50-46s50 16 50 46-22 50-50 50-50-20-50-50Z" stroke="#5f6d4f" stroke-width=3/><path d="M70 40c-2-10 8-14 5-24M90 40c-2-12 10-16 6-26M110 40c-2-10 8-14 5-24" stroke="#5f6d4f" stroke-width=3 stroke-linecap=round/></svg>'}
  if(cfg.siteAboutImg){const im=document.getElementById('aboutImg');im.src=cfg.siteAboutImg;im.style.display='block';document.getElementById('aboutFallback').style.display='none'}
@@ -232,7 +238,7 @@ let M=null,tb=null;
    if(!n)return alert('Please enter your name');if(!p)return alert('Please enter your mobile number');
    e.target.disabled=true;e.target.textContent='Placing order…';
    const{error}=await sb.rpc('place_order',{t:T,n,p,nt:ov.querySelector('#coNote').value.trim(),its:Object.values(cart).map(c=>({id:c.id,size:c.size,qty:c.q}))});
-   if(error){e.target.disabled=false;e.target.textContent='Place order';return alert(/busy/.test(error.message)?'Too many pending orders for this table. Please call our staff.':'Could not place the order. Please try again or call our staff.')}
+   if(error){e.target.disabled=false;e.target.textContent='Place order';return alert(/closed/.test(error.message)?"We're not taking online orders right now — please check back soon.":/busy/.test(error.message)?'Too many pending orders for this table. Please call our staff.':'Could not place the order. Please try again or call our staff.')}
    for(const k in cart)delete cart[k];ov.remove();drawMenu();drawCartBar();
    const ok=document.createElement('div');ok.className='sheet-ov';ok.innerHTML='<div class=sheet style="text-align:center"><h3>✅ Order sent!</h3><p>Thank you '+esc(n)+'. Our staff will confirm it shortly.</p><button class=cta id=okClose>Order more</button></div>';document.body.append(ok);ok.onclick=e=>{if(e.target===ok||e.target.id=='okClose')ok.remove()}
   };

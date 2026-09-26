@@ -34,8 +34,10 @@ $$;
 grant execute on function public_menu() to anon;
 
 create function place_order(t text,n text,p text,nt text,its jsonb) returns void language plpgsql security definer set search_path=public as $$
-declare cnt int;
+declare cnt int; is_closed boolean;
 begin
+ select coalesce((data->>'closed')::boolean,false) into is_closed from records where id='settings';
+ if is_closed then raise exception 'closed: we are not taking online orders right now'; end if;
  select count(*) into cnt from guest_orders where tbl=t and status='new' and created_at>now()-interval '30 minutes';
  if cnt>=5 then raise exception 'busy: too many pending orders for this table'; end if;
  insert into guest_orders(tbl,name,phone,note,items) values(t,n,p,nt,its);
