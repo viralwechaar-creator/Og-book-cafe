@@ -1,5 +1,5 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>OG Book Cafe</title>
-<meta name=description content="A quiet corner for books and coffee.">
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Restaurant</title>
+<meta name=description content="Order online and see our menu.">
 <link rel=icon href=/logo.png>
 <link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel=stylesheet>
@@ -88,7 +88,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .sline{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
 </style></head><body>
 <header><nav>
- <a class=brand href=#top><img id=navlogo src=/logo.png alt=""><span id=navname>OG Book Cafe</span></a>
+ <a class=brand href=#top><img id=navlogo src=/logo.png alt=""><span id=navname>Restaurant</span></a>
  <a class=link href=#about>About</a><a class=link href=#menu>Menu</a><a class=link href=#gallery>Gallery</a><a class=link href=#visit>Visit</a>
  <a class=cta id=orderCta href="https://wa.me/" target=_blank rel=noopener>Order on WhatsApp</a>
 </nav></header>
@@ -100,9 +100,9 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
  <svg class="doodle d2" viewBox="0 0 120 90" fill=none xmlns=http://www.w3.org/2000/svg><rect x=10 y=20 width=60 height=44 rx=3 stroke="#5f6d4f" stroke-width=2/><path d="M14 24h52M20 34h30M20 42h34M20 50h24" stroke="#5f6d4f" stroke-width=1.5/><path d="M70 20l30-8v56l-30 4" stroke="#5f6d4f" stroke-width=2/></svg>
  <svg class="doodle d3" viewBox="0 0 60 60" xmlns=http://www.w3.org/2000/svg><circle cx=30 cy=30 r=28 stroke="#5f6d4f" stroke-width=1.5 fill=none stroke-dasharray="4 6"/></svg>
  <div class=wrap>
-  <div class=kicker id=kicker>OG Book Cafe · Books &amp; Brew</div>
-  <h1 id=heroTitle class=reveal>Quiet pages.<br>Warm cups.</h1>
-  <p class=reveal id=heroSub style="transition-delay:.1s">A slow corner to read, work and linger — good coffee, good books, and a seat that doesn't rush you.</p>
+  <div class=kicker id=kicker>Restaurant · Welcome</div>
+  <h1 id=heroTitle class=reveal>Good food.<br>Good company.</h1>
+  <p class=reveal id=heroSub style="transition-delay:.1s">Browse our menu, order online, or stop by — we'd love to have you.</p>
   <div class="hero-art reveal" style="transition-delay:.2s"><img id=heroImg style="display:none" alt=""><div class=fallback id=heroFallback></div></div>
  </div>
 </section>
@@ -113,7 +113,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
   <div>
    <div class=eyebrow>Our Story</div>
    <h2 style="font-size:34px;font-weight:500;margin:0 0 16px">About the cafe</h2>
-   <p class=lead id=aboutText>We're a small book cafe — part reading room, part coffee counter. Come for the espresso, stay for the stacks.</p>
+   <p class=lead id=aboutText>Tell your customers what makes this place worth visiting — edit this from Settings.</p>
   </div>
  </div>
 </section>
@@ -151,7 +151,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 </section>
 
 <footer>
- <div id=fName>OG Book Cafe</div>
+ <div id=fName>Restaurant</div>
  <div class=socials><a id=fInsta href="#" target=_blank rel=noopener title=Instagram>◎</a><a id=fMaps href="#" target=_blank rel=noopener title=Directions>⌖</a></div>
  <div style="margin-top:10px;font-size:12px"><a href=/privacy.html style="opacity:.8">Privacy Policy</a> · <a href=/terms.html style="opacity:.8">Terms</a></div>
  <div style="margin-top:14px;opacity:.7">© <span id=year></span> <span id=fName2>OG Book Cafe</span> — powered by <a href="https://auzlabs.com" target=_blank rel=noopener style="opacity:.9">AUZlabs</a></div>
@@ -162,24 +162,25 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 <script src=/config.js></script>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'),inr=n=>'₹'+Math.round(n*100)/100;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');let inr=n=>'₹'+Math.round(n*100)/100;
 const waLink=(phone,text)=>{let p=(phone||'').replace(/\D/g,'');if(p.length==10)p='91'+p;return 'https://wa.me/'+(p||'')+(text?'?text='+encodeURIComponent(text):'')};
 const sb=supabase.createClient(CFG.url,CFG.key),T=new URLSearchParams(location.search).get('t'),cart={};
 let M=null,tb=null;
 (async()=>{
  try{const{data}=await sb.rpc('public_menu');M=data}catch(e){console.warn(e)}
  const cfg=(M&&M.cfg)||{};
+ inr=n=>(cfg.currency||'₹')+Math.round(n*100)/100;
  if(T){tb=(M&&M.tables||[]).find(x=>x.id==T);const bEl=document.getElementById('tbanner');bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.'}
- const name=cfg.name||'OG Book Cafe';
+ const name=cfg.name||'Restaurant';
  document.title=name;
  document.getElementById('navname').textContent=name;
  document.getElementById('fName').textContent=name;
  document.getElementById('fName2').textContent=name;
- document.getElementById('kicker').textContent=name+' · '+(cfg.siteKicker||'Books & Brew');
- document.getElementById('heroTitle').innerHTML=esc(cfg.siteTag||'Quiet pages.').replace(/\n/g,'<br>')||'Quiet pages.<br>Warm cups.';
+ document.getElementById('kicker').textContent=name+' · '+(cfg.siteKicker||'Welcome');
+ document.getElementById('heroTitle').innerHTML=esc(cfg.siteTag||'Good food.').replace(/\n/g,'<br>')||'Good food.<br>Good company.';
  if(cfg.siteTag)document.getElementById('heroTitle').innerHTML=esc(cfg.siteTag).split('\n').join('<br>');
- document.getElementById('heroSub').textContent=cfg.siteSub||"A slow corner to read, work and linger — good coffee, good books, and a seat that doesn't rush you.";
- document.getElementById('aboutText').textContent=cfg.siteAbout||"We're a small book cafe — part reading room, part coffee counter. Come for the espresso, stay for the stacks.";
+ document.getElementById('heroSub').textContent=cfg.siteSub||"Browse our menu, order online, or stop by — we'd love to have you.";
+ document.getElementById('aboutText').textContent=cfg.siteAbout||"Tell your customers what makes this place worth visiting — edit this from Settings.";
  document.getElementById('vAddr').textContent=cfg.addr||'—';
  document.getElementById('vHours').textContent=cfg.siteHours||'Mon–Sun · 9am – 9pm';
  document.getElementById('vPhone').textContent=cfg.phone||'—';

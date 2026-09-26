@@ -46,6 +46,7 @@ const id=new URLSearchParams(location.search).get('o');
  const{data,error}=await sb.rpc('public_invoice',{oid:id});
  if(error||!data||!data.order)return A.innerHTML='<div class=err>Invoice not found.</div>';
  const o=data.order,s=data.cfg||{},t=o.t,logo=s.logo||'/logo.png';
+ const inr=n=>(s.currency||'₹')+r2(n).toLocaleString('en-IN'),taxLabels=s.taxLabels&&s.taxLabels.length?s.taxLabels:['Tax'];
  const rows=o.lines.map(l=>`<tr><td>${esc(l.name)}${l.size?' ('+esc(l.size)+')':''}</td><td class=c>${l.qty}</td><td class=r>${inr(l.price)}</td><td class=r>${inr(l.price*l.qty)}</td></tr>`).join('');
  A.innerHTML=`<div class=hd><div class=mark>${s.logo?'<img src="'+esc(logo)+'">':'Invoice'}</div><div class=meta-r><b>Invoice No.</b> ${esc(o.no)}<br>${new Date(o.paidAt||o.created).toLocaleDateString()}</div></div>
 <hr>
@@ -55,14 +56,13 @@ const id=new URLSearchParams(location.search).get('o');
 <div class=tot><table>
 <tr><td>Subtotal</td><td>${inr(t.sub)}</td></tr>
 ${t.d?`<tr><td>Discount</td><td>-${inr(t.d)}</td></tr>`:''}
-<tr><td>CGST</td><td>${inr(t.tax/2)}</td></tr>
-<tr><td>SGST</td><td>${inr(t.tax/2)}</td></tr>
+${taxLabels.map(lbl=>`<tr><td>${esc(lbl)}</td><td>${inr(t.tax/taxLabels.length)}</td></tr>`).join('')}
 ${t.round?`<tr><td>Round off</td><td>${t.round>=0?'+':'-'}${inr(Math.abs(t.round))}</td></tr>`:''}
 <tr class=big><td>Total</td><td>${inr(t.total)}</td></tr>
 </table></div>
 <p class=thanks>${esc(s.ftr||'Thank you!')}</p>
 <hr style="margin-top:24px">
-<div class=ft><div><b>Paid via</b>${(o.pays||[]).map(p=>p.m.toUpperCase()+' — '+inr(p.amt)).join('<br>')||'—'}</div><div class=sig><b>${esc(s.name)}</b><br>${esc(s.addr)}${s.gstin?'<br>GSTIN '+esc(s.gstin):''}</div></div>
+<div class=ft><div><b>Paid via</b>${(o.pays||[]).map(p=>p.m.toUpperCase()+' — '+inr(p.amt)).join('<br>')||'—'}</div><div class=sig><b>${esc(s.name)}</b><br>${esc(s.addr)}${s.gstin?'<br>'+esc(s.taxIdLabel||'Tax ID')+' '+esc(s.gstin):''}</div></div>
 <div class=powered>Powered by <a href="https://auzlabs.com" target=_blank rel=noopener>AUZlabs</a></div>`;
  if(s.logo){const im=A.querySelector('.mark img');if(im)im.onerror=()=>im.replaceWith(document.createTextNode('Invoice'))}
 })();
