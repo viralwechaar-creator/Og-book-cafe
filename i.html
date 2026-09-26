@@ -57,6 +57,7 @@ const id=new URLSearchParams(location.search).get('o');
 ${t.d?`<tr><td>Discount</td><td>-${inr(t.d)}</td></tr>`:''}
 <tr><td>CGST</td><td>${inr(t.tax/2)}</td></tr>
 <tr><td>SGST</td><td>${inr(t.tax/2)}</td></tr>
+${t.round?`<tr><td>Round off</td><td>${t.round>=0?'+':'-'}${inr(Math.abs(t.round))}</td></tr>`:''}
 <tr class=big><td>Total</td><td>${inr(t.total)}</td></tr>
 </table></div>
 <p class=thanks>${esc(s.ftr||'Thank you!')}</p>

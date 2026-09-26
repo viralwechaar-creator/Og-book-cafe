@@ -100,6 +100,7 @@ return `${dup?'<div class=dup>DUPLICATE — REPRINT</div>':''}<div class=hd><div
 ${t.d?`<tr><td>Discount</td><td>-${inrc(t.d)}</td></tr>`:''}
 <tr><td>CGST</td><td>${inrc(t.tax/2)}</td></tr>
 <tr><td>SGST</td><td>${inrc(t.tax/2)}</td></tr>
+${t.round?`<tr><td>Round off</td><td>${t.round>=0?'+':'-'}${inrc(Math.abs(t.round))}</td></tr>`:''}
 <tr class=big><td>Total</td><td>${inrc(t.total)}</td></tr>
 ${refunded?`<tr><td>Refunded</td><td>-${inrc(refunded)}</td></tr>`:''}
 </table></div>
