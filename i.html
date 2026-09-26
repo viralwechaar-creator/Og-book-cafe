@@ -45,7 +45,7 @@ const id=new URLSearchParams(location.search).get('o');
  if(!id)return A.innerHTML='<div class=err>Invoice not found.</div>';
  const{data,error}=await sb.rpc('public_invoice',{oid:id});
  if(error||!data||!data.order)return A.innerHTML='<div class=err>Invoice not found.</div>';
- const o=data.order,s=data.cfg||{},t=o.t,logo=s.logo||'/logo.png?v=2';
+ const o=data.order,s=data.cfg||{},t=o.t,logo=s.logo||'/logo.png?v=3';
  const rows=o.lines.map(l=>`<tr><td>${esc(l.name)}${l.size?' ('+esc(l.size)+')':''}</td><td class=c>${l.qty}</td><td class=r>${inr(l.price)}</td><td class=r>${inr(l.price*l.qty)}</td></tr>`).join('');
  A.innerHTML=`<div class=hd><div class=mark>${s.logo?'<img src="'+esc(logo)+'">':'Invoice'}</div><div class=meta-r><b>Invoice No.</b> ${esc(o.no)}<br>${new Date(o.paidAt||o.created).toLocaleDateString()}</div></div>
 <hr>

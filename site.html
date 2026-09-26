@@ -1,6 +1,6 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>OG Book Cafe</title>
 <meta name=description content="A quiet corner for books and coffee.">
-<link rel=icon href=/logo.png?v=2><link rel=apple-touch-icon href=/icon.png?v=2>
+<link rel=icon href=/logo.png?v=3><link rel=apple-touch-icon href=/icon.png?v=3>
 <link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel=stylesheet>
 <style>
@@ -87,10 +87,11 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .custom-box{margin-top:22px;padding:18px 20px;border:1px dashed var(--line);border-radius:16px;background:var(--paper)}
 .custom-box b{font-family:Fraunces,serif;font-weight:500;font-size:17px}
 .custom-box p{margin:4px 0 12px;font-size:13px;color:#8a8577}
-.custom-row{display:flex;gap:8px}
-.custom-row input[type=text],.custom-row input:not([type]){flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
-.custom-row input[type=number]{width:56px;padding:10px 6px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;text-align:center}
-.custom-row .cta{padding:10px 18px}
+.custom-box{max-width:100%;box-sizing:border-box}
+.custom-row{display:flex;flex-wrap:wrap;gap:8px}
+.custom-row input:not([type=number]){flex:1 1 100%;min-width:0;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.custom-row input[type=number]{width:56px;flex:0 0 auto;padding:10px 6px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;text-align:center}
+.custom-row .cta{flex:1 0 auto;padding:10px 18px;white-space:nowrap}
 .custom-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px;margin-top:8px}
 .custom-line span.tag{font-size:11px;color:#8a8577;text-transform:uppercase;letter-spacing:.05em}
 .custom-line button{background:none;border:none;color:#b3492f;cursor:pointer;font:inherit}
@@ -104,7 +105,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .sline{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
 </style></head><body>
 <header><nav>
- <a class=brand href=#top><img id=navlogo src=/logo.png?v=2 alt=""><span id=navname>OG Book Cafe</span></a>
+ <a class=brand href=#top><img id=navlogo src=/logo.png?v=3 alt=""><span id=navname>OG Book Cafe</span></a>
  <a class=link href=#about>About</a><a class=link href=#menu>Menu</a><a class=link href=#gallery>Gallery</a><a class=link href=#visit>Visit</a>
  <a class=cta id=orderCta href="https://wa.me/" target=_blank rel=noopener>Order on WhatsApp</a>
 </nav></header>
