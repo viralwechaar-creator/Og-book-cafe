@@ -89,7 +89,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .custom-box p{margin:4px 0 12px;font-size:13px;color:#8a8577}
 .custom-box{max-width:100%;box-sizing:border-box}
 .custom-row{display:flex;flex-wrap:wrap;gap:8px}
-.custom-row input:not([type=number]){flex:1 1 100%;min-width:0;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.custom-row input:not([type=number]),.custom-row select{flex:1 1 100%;min-width:0;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
 .custom-row input[type=number]{width:56px;flex:0 0 auto;padding:10px 6px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;text-align:center}
 .custom-row .cta{flex:1 0 auto;padding:10px 18px;white-space:nowrap}
 .custom-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px;margin-top:8px}
@@ -144,6 +144,11 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
   <div class="reveal" style="text-align:center;margin-bottom:36px">
    <div class=eyebrow style="justify-content:center;display:flex">On The Menu</div>
    <h2 style="font-size:34px;font-weight:500;margin:8px 0 0">What we're brewing</h2>
+  </div>
+  <div id=tablePicker class=custom-box style="display:none">
+   <b>Ordering from your table?</b>
+   <p>Pick your table below to order straight from your phone — no QR scan needed.</p>
+   <div class=custom-row><select id=tableSelect><option value="">Select your table…</option></select><button id=tableGo class=cta type=button>Start ordering</button></div>
   </div>
   <div class=tabs id=menuTabs></div>
   <div class=menu-grid id=menuGrid></div>
@@ -201,6 +206,21 @@ let M=null,tb=null;
   bEl.style.display='block';bEl.style.background='#2a2822';bEl.textContent='🚪 '+(cfg.closedMsg||"We're closed right now — please check back soon.");
  }else if(T){
   tb=(M&&M.tables||[]).find(x=>x.id==T);bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.';
+ }else{
+  const tables=(M&&M.tables||[]).sort((a,b)=>a.name.localeCompare(b.name,0,{numeric:true})),sel=document.getElementById('tableSelect');
+  tables.forEach(t=>sel.append(new Option(t.name,t.id)));
+  if(tables.length){
+   document.getElementById('tablePicker').style.display='block';
+   document.getElementById('tableGo').onclick=()=>{
+    const chosen=tables.find(t=>t.id==sel.value);
+    if(!chosen)return alert('Please select your table');
+    tb=chosen;
+    document.getElementById('tablePicker').style.display='none';
+    bEl.style.display='block';bEl.textContent='📍 Ordering for '+tb.name+' — tap items below to add to your order';
+    document.getElementById('customBox').style.display='block';
+    drawMenu();drawCartBar();
+   };
+  }
  }
  const name=cfg.name||'OG Book Cafe';
  document.title=name;
@@ -283,7 +303,7 @@ let M=null,tb=null;
    if(!n)return alert('Please enter your name');if(!p)return alert('Please enter your mobile number');
    e.target.disabled=true;e.target.textContent='Placing order…';
    const its=Object.values(cart).map(c=>({id:c.id,size:c.size,qty:c.q})).concat(customItems.map(c=>({custom:true,name:c.name,qty:c.q})));
-   const{error}=await sb.rpc('place_order',{t:T,n,p,nt:ov.querySelector('#coNote').value.trim(),its});
+   const{error}=await sb.rpc('place_order',{t:tb.id,n,p,nt:ov.querySelector('#coNote').value.trim(),its});
    if(error){e.target.disabled=false;e.target.textContent='Place order';return alert(/closed/.test(error.message)?"We're not taking online orders right now — please check back soon.":/busy/.test(error.message)?'Too many pending orders for this table. Please call our staff.':'Could not place the order. Please try again or call our staff.')}
    for(const k in cart)delete cart[k];customItems.length=0;ov.remove();drawMenu();drawCustom();drawCartBar();
    const ok=document.createElement('div');ok.className='sheet-ov';ok.innerHTML='<div class=sheet style="text-align:center"><h3>✅ Order sent!</h3><p>Thank you '+esc(n)+'. Our staff will confirm it shortly.</p><button class=cta id=okClose>Order more</button></div>';document.body.append(ok);ok.onclick=e=>{if(e.target===ok||e.target.id=='okClose')ok.remove()}
