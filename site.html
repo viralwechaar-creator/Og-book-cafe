@@ -46,20 +46,20 @@ section{padding:70px 0}
 .about-img{border-radius:20px;box-shadow:var(--shadow);aspect-ratio:4/5;background:linear-gradient(160deg,#efe9d8,#d7ceb4);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .about-img img{width:100%;height:100%;object-fit:cover}
 p.lead{font-size:19px;color:#4a4638;white-space:pre-line}
-/* menu */
-.tabs{display:flex;gap:10px;overflow-x:auto;padding-bottom:14px;margin-bottom:24px}
-.tabs button{flex:none;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:9px 18px;border-radius:100px;font:13px/1 Inter,sans-serif;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;transition:all .2s}
-.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.mcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 10px 26px -18px rgba(42,40,34,.35);transition:transform .25s,box-shadow .25s}
-.mcard:hover{transform:translateY(-4px);box-shadow:0 20px 36px -18px rgba(42,40,34,.4)}
-.mcard .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.mcard b{font-family:Fraunces,serif;font-size:18px;font-weight:500}
-.mcard .price{color:var(--olive-dk);font-weight:600;white-space:nowrap}
-.mcard .top{display:flex;gap:12px;align-items:flex-start}
-.mcard .icon{flex:none;width:38px;height:38px}
-.mcard .icon svg{width:100%;height:100%}
-.mcard .desc{font-size:13px;color:#8a8577;margin:4px 0 0;line-height:1.5}
+/* menu — a single continuous scroll grouped by category, with a sticky
+   quick-jump nav that highlights as you scroll (scrollspy), instead of
+   click-a-tab-to-filter-then-browse-a-grid */
+.catnav{position:sticky;top:65px;z-index:20;display:flex;gap:10px;overflow-x:auto;padding:12px 0;margin-bottom:10px;background:var(--cream)}
+.catnav button{flex:none;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:9px 18px;border-radius:100px;font:13px/1 Inter,sans-serif;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.catnav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.mgroup{margin-bottom:40px;scroll-margin-top:120px}
+.mgroup-title{font-size:26px;font-weight:500;margin:0 0 6px}
+.mrow{padding:20px 0;border-top:1px solid var(--line)}
+.mrow:first-of-type{border-top:none}
+.mrow .row{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+.mrow b{font-family:Fraunces,serif;font-size:19px;font-weight:500}
+.mrow .price{color:var(--olive-dk);font-weight:600;white-space:nowrap}
+.mrow .desc{font-size:14px;color:#8a8577;margin:6px 0 0;line-height:1.55;max-width:540px}
 /* gallery */
 .gal{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media(min-width:700px){.gal{grid-template-columns:repeat(4,1fr)}}
@@ -83,8 +83,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .float-bar a svg{width:22px;height:22px;fill:currentColor}
 /* ordering */
 .tbanner{background:var(--ink);color:#f2efe6;text-align:center;padding:10px;font-size:13px;letter-spacing:.03em}
-.mcard .variant{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
-.mcard .variant:first-of-type{border-top:none;margin-top:6px}
+.mrow .variant{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px}
 .stepper{display:flex;align-items:center;gap:10px}
 .stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .stepper button:disabled{opacity:.3;cursor:default}
@@ -149,13 +148,8 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
    <div class=eyebrow style="justify-content:center;display:flex">On The Menu</div>
    <h2 style="font-size:34px;font-weight:500;margin:8px 0 0">What we're brewing</h2>
   </div>
-  <div id=tablePicker class=custom-box style="display:none">
-   <b>Ordering from your table?</b>
-   <p>Pick your table below to order straight from your phone — no QR scan needed.</p>
-   <div class=custom-row><select id=tableSelect><option value="">Select your table…</option></select><button id=tableGo class=cta type=button>Start ordering</button></div>
-  </div>
-  <div class=tabs id=menuTabs></div>
-  <div class=menu-grid id=menuGrid></div>
+  <div class=catnav id=catNav></div>
+  <div id=menuList></div>
   <div id=customBox class=custom-box style="display:none">
    <b>Don't see what you want?</b>
    <p>Ask for it here — our staff will confirm it and price your bill.</p>
@@ -210,21 +204,6 @@ let M=null,tb=null;
   bEl.style.display='block';bEl.style.background='#2a2822';bEl.textContent='🚪 '+(cfg.closedMsg||"We're closed right now — please check back soon.");
  }else if(T){
   tb=(M&&M.tables||[]).find(x=>x.id==T);bEl.style.display='block';bEl.textContent=tb?('📍 Ordering for '+tb.name+' — tap items below to add to your order'):'This QR code isn\'t linked to a table — please ask our staff.';
- }else{
-  const tables=(M&&M.tables||[]).sort((a,b)=>a.name.localeCompare(b.name,0,{numeric:true})),sel=document.getElementById('tableSelect');
-  tables.forEach(t=>sel.append(new Option(t.name,t.id)));
-  if(tables.length){
-   document.getElementById('tablePicker').style.display='block';
-   document.getElementById('tableGo').onclick=()=>{
-    const chosen=tables.find(t=>t.id==sel.value);
-    if(!chosen)return alert('Please select your table');
-    tb=chosen;
-    document.getElementById('tablePicker').style.display='none';
-    bEl.style.display='block';bEl.textContent='📍 Ordering for '+tb.name+' — tap items below to add to your order';
-    document.getElementById('customBox').style.display='block';
-    drawMenu();drawCartBar();
-   };
-  }
  }
  const name=cfg.name||'OG Book Cafe';
  document.title=name;
@@ -258,8 +237,8 @@ let M=null,tb=null;
  const fallbackDoodles=['<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><rect x=20 y=20 width=60 height=60 rx=6 stroke="#5f6d4f" stroke-width=2/><path d="M30 40h40M30 50h30M30 60h34" stroke="#5f6d4f" stroke-width=1.5/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><ellipse cx=50 cy=60 rx=28 ry=22 stroke="#5f6d4f" stroke-width=2/><path d="M42 30c-2-6 4-8 3-14M58 30c-2-7 5-9 3-15" stroke="#5f6d4f" stroke-width=2 stroke-linecap=round/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><path d="M20 30l60-8v56l-60 8z" stroke="#5f6d4f" stroke-width=2/><path d="M30 40h40M30 50h34M30 60h30" stroke="#5f6d4f" stroke-width=1.5/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><circle cx=50 cy=50 r=30 stroke="#5f6d4f" stroke-width=2/><path d="M50 20v30l20 12" stroke="#5f6d4f" stroke-width=2/></svg>'];
  (imgs.length?imgs:fallbackDoodles).slice(0,8).forEach((src,i)=>{const d=document.createElement('div');if(imgs.length)d.innerHTML='<img src="'+esc(src)+'">';else d.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">'+fallbackDoodles[i%4]+'</div>';gEl.append(d)});
  const cats=(M&&M.cats||[]).slice().sort((a,b)=>a.n-b.n),items=(M&&M.items||[]).filter(i=>!i.off);
- const tabsEl=document.getElementById('menuTabs'),gridEl=document.getElementById('menuGrid');
- let active=cats[0]&&cats[0].id;
+ const navEl=document.getElementById('catNav'),listEl=document.getElementById('menuList');
+ let catIO=null;
  const priceOf=k=>{const j=k.indexOf('|'),i=items.find(x=>x.id==k.slice(0,j)),sz=k.slice(j+1),s=sz&&(i.sizes||[]).find(x=>x.l==sz);return[i,sz,s?s.p:i.price]};
  const cartTotal=()=>{let n=0,t=0;for(const k in cart){t+=priceOf(k)[2]*cart[k].q;n+=cart[k].q}const cn=customItems.reduce((a,c)=>a+c.q,0);return{n:n+cn,t,cn}};
  function chg(k,d){const[i,sz,p]=priceOf(k),c=cart[k]||(cart[k]={id:i.id,size:sz,q:0});c.q=Math.max(0,c.q+d);if(!c.q)delete cart[k];drawMenu();drawCartBar()}
@@ -276,32 +255,38 @@ let M=null,tb=null;
   nameEl.value='';qtyEl.value=1;nameEl.focus();
   drawCustom();drawCartBar();
  };
- const DOODLES={
-  tea:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M25 45h42l-4 30a6 6 0 0 1-6 5H35a6 6 0 0 1-6-5L25 45Z" stroke="#5f6d4f" stroke-width=3/><path d="M67 50h6a10 10 0 0 1 0 20h-4" stroke="#5f6d4f" stroke-width=3/><path d="M38 38c-2-6 3-8 2-14M50 38c-2-7 4-9 2-15M62 38c-2-6 3-8 2-14" stroke="#5f6d4f" stroke-width=3 stroke-linecap=round/><ellipse cx=46 cy=45 rx=21 ry=4 stroke="#5f6d4f" stroke-width=2/></svg>',
-  coffee:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M28 40h38l-5 38a6 6 0 0 1-6 5H39a6 6 0 0 1-6-5L28 40Z" stroke="#5f6d4f" stroke-width=3/><path d="M66 45h7a11 11 0 0 1 0 22h-5" stroke="#5f6d4f" stroke-width=3/><path d="M40 34c-2-7 4-9 2-16M52 34c-2-8 4-10 2-17" stroke="#5f6d4f" stroke-width=3 stroke-linecap=round/></svg>',
-  pastry:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M20 55c0-16 30-30 30-30s30 14 30 30" stroke="#5f6d4f" stroke-width=3/><path d="M18 55h64M24 55l4 15a6 6 0 0 0 6 5h32a6 6 0 0 0 6-5l4-15" stroke="#5f6d4f" stroke-width=3/><path d="M40 40c4 4 16 4 20 0" stroke="#5f6d4f" stroke-width=2/></svg>',
-  cold:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M32 25h36l-5 55a6 6 0 0 1-6 5H43a6 6 0 0 1-6-5l-5-55Z" stroke="#5f6d4f" stroke-width=3/><path d="M30 25h40M45 25v60M55 40l-10 8M55 55l-10 8" stroke="#5f6d4f" stroke-width=2/><path d="M60 18c8 4 8 10 2 14" stroke="#5f6d4f" stroke-width=2 stroke-linecap=round/></svg>',
-  sandwich:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M15 55l35-25 35 25" stroke="#5f6d4f" stroke-width=3/><path d="M18 55h64l-6 20a6 6 0 0 1-6 4H30a6 6 0 0 1-6-4l-6-20Z" stroke="#5f6d4f" stroke-width=3/><path d="M28 55c4-4 8 4 12 0s8 4 12 0 8 4 12 0 8 4 12 0" stroke="#5f6d4f" stroke-width=2/></svg>',
-  book:'<svg viewBox="0 0 100 100" fill=none xmlns=http://www.w3.org/2000/svg><path d="M20 25c0-3 2-5 5-5h20c3 0 5 2 5 5v50l-15-8-15 8V25Z" stroke="#5f6d4f" stroke-width=3/><path d="M50 25c0-3 2-5 5-5h20c3 0 5 2 5 5v50l-15-8-15 8V25Z" stroke="#5f6d4f" stroke-width=3/></svg>',
- };
- const iconFor=nm=>{const s=nm.toLowerCase();if(/tea|chai/.test(s))return DOODLES.tea;if(/coffee|latte|espresso|cappuccino|mocha|americano|cold\s*brew/.test(s))return DOODLES.coffee;if(/cake|pastry|croissant|muffin|cookie|brownie|donut|puff/.test(s))return DOODLES.pastry;if(/juice|shake|smoothie|iced|cold|soda|float/.test(s))return DOODLES.cold;if(/sandwich|toast|burger|wrap|panini|maggi|pasta/.test(s))return DOODLES.sandwich;if(/book|read/.test(s))return DOODLES.book;return DOODLES.coffee};
  function drawMenu(){
-  tabsEl.innerHTML='';cats.forEach(c=>{const b=document.createElement('button');b.textContent=c.name;if(c.id==active)b.className='on';b.onclick=()=>{active=c.id;drawMenu()};tabsEl.append(b)});
-  gridEl.innerHTML='';items.filter(i=>i.cat==active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(i=>{
-   const c=document.createElement('div');c.className='mcard';
-   const head='<div class=top><div class=icon>'+iconFor(i.name)+'</div><div style="flex:1"><div class=row><b>'+esc(i.name)+'</b>'+(tb?'':'<span class=price>'+esc(i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price))+'</span>')+'</div>'+(i.desc?'<p class=desc>'+esc(i.desc)+'</p>':'')+'</div></div>';
-   if(tb){
-    const variants=i.sizes&&i.sizes.length?i.sizes.map(s=>[s.l,s.p]):[['',i.price]];
-    c.innerHTML=head+variants.map(([sz,p])=>{const k=i.id+'|'+sz,q=(cart[k]||{}).q||0;return '<div class=variant><span>'+(sz?esc(sz)+' — ':'')+inr(p)+'</span><div class=stepper><button data-k="'+esc(k)+'" data-d=-1>−</button><b>'+q+'</b><button data-k="'+esc(k)+'" data-d=1>+</button></div></div>'}).join('');
-    c.querySelectorAll('button').forEach(b=>b.onclick=()=>chg(b.dataset.k,+b.dataset.d));
-   }else{
-    c.innerHTML=head;
-   }
-   gridEl.append(c)
+  const nonEmptyCats=cats.filter(c=>items.some(i=>i.cat==c.id));
+  navEl.innerHTML='';
+  nonEmptyCats.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.name;if(!i)b.className='on';b.onclick=()=>{const g=document.getElementById('cat-'+c.id);if(g)g.scrollIntoView({behavior:'smooth',block:'start'})};navEl.append(b)});
+  listEl.innerHTML='';
+  nonEmptyCats.forEach(c=>{
+   const g=document.createElement('div');g.className='mgroup';g.id='cat-'+c.id;
+   g.innerHTML='<h3 class=mgroup-title>'+esc(c.name)+'</h3>';
+   items.filter(i=>i.cat==c.id).sort((a,b)=>a.name.localeCompare(b.name)).forEach(i=>{
+    const row=document.createElement('div');row.className='mrow';
+    const priceHtml=tb?'':'<span class=price>'+esc(i.sizes&&i.sizes.length?i.sizes.map(s=>s.l+' '+inr(s.p)).join(' / '):inr(i.price))+'</span>';
+    row.innerHTML='<div class=row><b>'+esc(i.name)+'</b>'+priceHtml+'</div>'+(i.desc?'<p class=desc>'+esc(i.desc)+'</p>':'');
+    if(tb){
+     const variants=i.sizes&&i.sizes.length?i.sizes.map(s=>[s.l,s.p]):[['',i.price]];
+     row.innerHTML+=variants.map(([sz,p])=>{const k=i.id+'|'+sz,q=(cart[k]||{}).q||0;return '<div class=variant><span>'+(sz?esc(sz)+' — ':'')+inr(p)+'</span><div class=stepper><button data-k="'+esc(k)+'" data-d=-1>−</button><b>'+q+'</b><button data-k="'+esc(k)+'" data-d=1>+</button></div></div>'}).join('');
+    }
+    g.append(row);
+   });
+   listEl.append(g);
   });
-  if(!items.filter(i=>i.cat==active).length)gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
+  listEl.querySelectorAll('.stepper button').forEach(b=>b.onclick=()=>chg(b.dataset.k,+b.dataset.d));
+  if(!nonEmptyCats.length){listEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';return}
+  if(catIO)catIO.disconnect();
+  catIO=new IntersectionObserver(entries=>{
+   entries.forEach(e=>{if(!e.isIntersecting)return;
+    const id=e.target.id.slice(4),idx=nonEmptyCats.findIndex(c=>c.id==id);
+    [...navEl.children].forEach((b,i)=>b.classList.toggle('on',i==idx));
+   });
+  },{rootMargin:'-130px 0px -65% 0px',threshold:0});
+  listEl.querySelectorAll('.mgroup').forEach(g=>catIO.observe(g));
  }
- if(cats.length)drawMenu();else gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
+ drawMenu();
  if(tb)document.getElementById('customBox').style.display='block';
  document.getElementById('cartBarBtn').onclick=openCheckout;
  function openCheckout(){
