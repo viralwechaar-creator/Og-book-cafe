@@ -71,6 +71,12 @@ p.lead{font-size:19px;color:#4a4638;white-space:pre-line}
 footer{text-align:center;padding:40px 20px;font-size:13px;color:#7a7561}
 footer .socials{display:flex;gap:14px;justify-content:center;margin-top:14px}
 footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-decoration:none}
+.float-bar{position:fixed;right:18px;bottom:110px;z-index:50;display:flex;flex-direction:column;gap:10px}
+.float-bar a{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 8px 20px -8px rgba(42,40,34,.4);transition:transform .2s}
+.float-bar a:hover{transform:scale(1.08)}
+.float-bar a.wa{background:#25D366;color:#fff}
+.float-bar a.insta{background:radial-gradient(circle at 30% 110%,#fdf497,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);color:#fff}
+.float-bar a svg{width:22px;height:22px;fill:currentColor}
 /* ordering */
 .tbanner{background:var(--ink);color:#f2efe6;text-align:center;padding:10px;font-size:13px;letter-spacing:.03em}
 .mcard .variant{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
@@ -78,6 +84,16 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 .stepper{display:flex;align-items:center;gap:10px}
 .stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .stepper button:disabled{opacity:.3;cursor:default}
+.custom-box{margin-top:22px;padding:18px 20px;border:1px dashed var(--line);border-radius:16px;background:var(--paper)}
+.custom-box b{font-family:Fraunces,serif;font-weight:500;font-size:17px}
+.custom-box p{margin:4px 0 12px;font-size:13px;color:#8a8577}
+.custom-row{display:flex;gap:8px}
+.custom-row input[type=text],.custom-row input:not([type]){flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.custom-row input[type=number]{width:56px;padding:10px 6px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;text-align:center}
+.custom-row .cta{padding:10px 18px}
+.custom-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px;margin-top:8px}
+.custom-line span.tag{font-size:11px;color:#8a8577;text-transform:uppercase;letter-spacing:.05em}
+.custom-line button{background:none;border:none;color:#b3492f;cursor:pointer;font:inherit}
 .cartbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--ink);color:#fff;padding:14px 20px;display:none;align-items:center;justify-content:space-between;box-shadow:0 -14px 30px -14px rgba(0,0,0,.4)}
 .cartbar button{background:#fff;color:var(--ink);border:none;padding:10px 20px;border-radius:100px;font:13px/1 Inter,sans-serif;font-weight:600;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
 .sheet-ov{position:fixed;inset:0;background:rgba(20,18,14,.5);z-index:70;display:flex;align-items:flex-end;justify-content:center}
@@ -92,6 +108,10 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
  <a class=link href=#about>About</a><a class=link href=#menu>Menu</a><a class=link href=#gallery>Gallery</a><a class=link href=#visit>Visit</a>
  <a class=cta id=orderCta href="https://wa.me/" target=_blank rel=noopener>Order on WhatsApp</a>
 </nav></header>
+<div class=float-bar>
+ <a id=floatInsta href="#" target=_blank rel=noopener title=Instagram style="display:none"><svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3.05.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.21.6 1.76 1.15.55.55.9 1.1 1.15 1.76.25.64.42 1.37.47 2.43.05 1.07.06 1.42.06 4.12s-.01 3.05-.06 4.12c-.05 1.06-.22 1.79-.47 2.43a4.9 4.9 0 0 1-1.15 1.76 4.9 4.9 0 0 1-1.76 1.15c-.64.25-1.37.42-2.43.47-1.07.05-1.42.06-4.12.06s-3.05-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47a4.9 4.9 0 0 1-1.76-1.15 4.9 4.9 0 0 1-1.15-1.76c-.25-.64-.42-1.37-.47-2.43C2.01 15.05 2 14.7 2 12s.01-3.05.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.21 1.15-1.76A4.9 4.9 0 0 1 5.44 2.54c.64-.25 1.37-.42 2.43-.47C8.95 2.01 9.3 2 12 2Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4ZM17.4 5.9a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg></a>
+ <a id=floatWa href="https://wa.me/" target=_blank rel=noopener title=WhatsApp class=wa><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.32A10 10 0 1 0 12 2Zm0 18.2a8.17 8.17 0 0 1-4.17-1.14l-.3-.18-3 .78.8-2.92-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.13c-.25-.12-1.45-.72-1.68-.8-.22-.08-.39-.12-.55.13-.16.24-.63.8-.78.96-.14.16-.28.18-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.15.16-.25.24-.41.08-.16.04-.31-.02-.43-.06-.12-.55-1.33-.76-1.83-.2-.48-.4-.42-.55-.42h-.47c-.16 0-.43.06-.65.31s-.86.84-.86 2.05.88 2.38 1 2.54c.13.16 1.73 2.64 4.2 3.7.59.25 1.05.4 1.4.52.59.19 1.13.16 1.55.1.47-.07 1.45-.59 1.66-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.47-.28Z"/></svg></a>
+</div>
 <div id=tbanner class=tbanner style="display:none"></div>
 
 <div id=top></div>
@@ -126,6 +146,12 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
   </div>
   <div class=tabs id=menuTabs></div>
   <div class=menu-grid id=menuGrid></div>
+  <div id=customBox class=custom-box style="display:none">
+   <b>Don't see what you want?</b>
+   <p>Ask for it here — our staff will confirm it and price your bill.</p>
+   <div class=custom-row><input id=customName placeholder="e.g. Extra hot water, no sugar chai"><input id=customQty type=number min=1 value=1><button id=customAdd class=cta type=button>Add</button></div>
+   <div id=customList></div>
+  </div>
  </div>
 </section>
 
@@ -164,7 +190,7 @@ footer .socials a{width:34px;height:34px;border-radius:50%;border:1px solid var(
 document.getElementById('year').textContent=new Date().getFullYear();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'),inr=n=>'₹'+Math.round(n*100)/100;
 const waLink=(phone,text)=>{let p=(phone||'').replace(/\D/g,'');if(p.length==10)p='91'+p;return 'https://wa.me/'+(p||'')+(text?'?text='+encodeURIComponent(text):'')};
-const sb=supabase.createClient(CFG.url,CFG.key),T=new URLSearchParams(location.search).get('t'),cart={};
+const sb=supabase.createClient(CFG.url,CFG.key),T=new URLSearchParams(location.search).get('t'),cart={},customItems=[];
 let M=null,tb=null;
 (async()=>{
  try{const{data}=await sb.rpc('public_menu');M=data}catch(e){console.warn(e)}
@@ -199,6 +225,10 @@ let M=null,tb=null;
  const insta=document.getElementById('fInsta'),maps=document.getElementById('fMaps');
  if(cfg.siteInsta)insta.href=cfg.siteInsta;else insta.style.display='none';
  if(cfg.siteMaps)maps.href=cfg.siteMaps;else maps.style.display='none';
+ const floatInsta=document.getElementById('floatInsta'),floatWa=document.getElementById('floatWa');
+ if(cfg.siteInsta){floatInsta.href=cfg.siteInsta;floatInsta.style.display='flex'}
+ floatWa.href=waLink(cfg.phone,'Hi '+name+', I have a question.');
+ if(!cfg.phone)floatWa.style.display='none';
  const gEl=document.getElementById('gallery-grid'),imgs=(cfg.siteGallery||'').split(',').map(s=>s.trim()).filter(Boolean);
  const fallbackDoodles=['<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><rect x=20 y=20 width=60 height=60 rx=6 stroke="#5f6d4f" stroke-width=2/><path d="M30 40h40M30 50h30M30 60h34" stroke="#5f6d4f" stroke-width=1.5/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><ellipse cx=50 cy=60 rx=28 ry=22 stroke="#5f6d4f" stroke-width=2/><path d="M42 30c-2-6 4-8 3-14M58 30c-2-7 5-9 3-15" stroke="#5f6d4f" stroke-width=2 stroke-linecap=round/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><path d="M20 30l60-8v56l-60 8z" stroke="#5f6d4f" stroke-width=2/><path d="M30 40h40M30 50h34M30 60h30" stroke="#5f6d4f" stroke-width=1.5/></svg>','<svg viewBox="0 0 100 100" width=50% xmlns=http://www.w3.org/2000/svg fill=none><circle cx=50 cy=50 r=30 stroke="#5f6d4f" stroke-width=2/><path d="M50 20v30l20 12" stroke="#5f6d4f" stroke-width=2/></svg>'];
  (imgs.length?imgs:fallbackDoodles).slice(0,8).forEach((src,i)=>{const d=document.createElement('div');if(imgs.length)d.innerHTML='<img src="'+esc(src)+'">';else d.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">'+fallbackDoodles[i%4]+'</div>';gEl.append(d)});
@@ -206,9 +236,21 @@ let M=null,tb=null;
  const tabsEl=document.getElementById('menuTabs'),gridEl=document.getElementById('menuGrid');
  let active=cats[0]&&cats[0].id;
  const priceOf=k=>{const j=k.indexOf('|'),i=items.find(x=>x.id==k.slice(0,j)),sz=k.slice(j+1),s=sz&&(i.sizes||[]).find(x=>x.l==sz);return[i,sz,s?s.p:i.price]};
- const cartTotal=()=>{let n=0,t=0;for(const k in cart){t+=priceOf(k)[2]*cart[k].q;n+=cart[k].q}return{n,t}};
+ const cartTotal=()=>{let n=0,t=0;for(const k in cart){t+=priceOf(k)[2]*cart[k].q;n+=cart[k].q}const cn=customItems.reduce((a,c)=>a+c.q,0);return{n:n+cn,t,cn}};
  function chg(k,d){const[i,sz,p]=priceOf(k),c=cart[k]||(cart[k]={id:i.id,size:sz,q:0});c.q=Math.max(0,c.q+d);if(!c.q)delete cart[k];drawMenu();drawCartBar()}
- function drawCartBar(){const{n,t}=cartTotal(),bar=document.getElementById('cartBar');if(!tb||!n){bar.style.display='none';return}bar.style.display='flex';document.getElementById('cartBarText').textContent=n+' item'+(n>1?'s':'')+' · '+inr(t)}
+ function drawCartBar(){const{n,t,cn}=cartTotal(),bar=document.getElementById('cartBar');if(!tb||!n){bar.style.display='none';return}bar.style.display='flex';document.getElementById('cartBarText').textContent=n+' item'+(n>1?'s':'')+(t?' · '+inr(t):'')+(cn?' ('+cn+' to be priced)':'')}
+ function drawCustom(){
+  const box=document.getElementById('customList');
+  box.innerHTML=customItems.map((c,idx)=>'<div class=custom-line><span>'+c.q+'× '+esc(c.name)+' <span class=tag>price tbc</span></span><button data-i="'+idx+'">Remove</button></div>').join('');
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{customItems.splice(+b.dataset.i,1);drawCustom();drawCartBar()});
+ }
+ document.getElementById('customAdd').onclick=()=>{
+  const nameEl=document.getElementById('customName'),qtyEl=document.getElementById('customQty'),nm=nameEl.value.trim(),q=Math.max(1,+qtyEl.value||1);
+  if(!nm)return;
+  customItems.push({name:nm,q});
+  nameEl.value='';qtyEl.value=1;nameEl.focus();
+  drawCustom();drawCartBar();
+ };
  function drawMenu(){
   tabsEl.innerHTML='';cats.forEach(c=>{const b=document.createElement('button');b.textContent=c.name;if(c.id==active)b.className='on';b.onclick=()=>{active=c.id;drawMenu()};tabsEl.append(b)});
   gridEl.innerHTML='';items.filter(i=>i.cat==active).sort((a,b)=>a.name.localeCompare(b.name)).forEach(i=>{
@@ -226,20 +268,23 @@ let M=null,tb=null;
   if(!items.filter(i=>i.cat==active).length)gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
  }
  if(cats.length)drawMenu();else gridEl.innerHTML='<p style="opacity:.6">Menu coming soon.</p>';
+ if(tb)document.getElementById('customBox').style.display='block';
  document.getElementById('cartBarBtn').onclick=openCheckout;
  function openCheckout(){
   const{t}=cartTotal(),ov=document.createElement('div');ov.className='sheet-ov';ov.onclick=e=>{if(e.target===ov)ov.remove()};
   const rows=Object.keys(cart).map(k=>{const[i,sz,p]=priceOf(k);return '<div class=sline><span>'+cart[k].q+'× '+esc(i.name)+(sz?' ('+esc(sz)+')':'')+'</span><span>'+inr(p*cart[k].q)+'</span></div>'}).join('');
-  ov.innerHTML='<div class=sheet><h3>Your order · '+esc(tb.name)+'</h3>'+rows+'<div class=sline style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><b>Estimated total</b><b>'+inr(t)+'</b></div><input id=coName placeholder="Your name *"><input id=coPhone type=tel placeholder="Mobile number *"><textarea id=coNote placeholder="Notes (e.g. less spicy, no onion)" rows=2></textarea><button class="cta" id=coGo style="margin-top:4px">Place order</button><button style="background:none;border:none;width:100%;padding:10px;color:#8a8577;cursor:pointer" id=coBack>Back</button></div>';
+  const customRows=customItems.map(c=>'<div class=sline><span>'+c.q+'× '+esc(c.name)+'</span><span style="opacity:.6">price tbc</span></div>').join('');
+  ov.innerHTML='<div class=sheet><h3>Your order · '+esc(tb.name)+'</h3>'+rows+customRows+'<div class=sline style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><b>Estimated total</b><b>'+inr(t)+(customItems.length?' +':'')+'</b></div>'+(customItems.length?'<p style="font-size:12px;color:#8a8577;margin:-4px 0 10px">Custom item price'+(customItems.length>1?'s':'')+' will be confirmed by our staff.</p>':'')+'<input id=coName placeholder="Your name *"><input id=coPhone type=tel placeholder="Mobile number *"><textarea id=coNote placeholder="Notes (e.g. less spicy, no onion)" rows=2></textarea><button class="cta" id=coGo style="margin-top:4px">Place order</button><button style="background:none;border:none;width:100%;padding:10px;color:#8a8577;cursor:pointer" id=coBack>Back</button></div>';
   document.body.append(ov);
   ov.querySelector('#coBack').onclick=()=>ov.remove();
   ov.querySelector('#coGo').onclick=async e=>{
    const n=ov.querySelector('#coName').value.trim(),p=ov.querySelector('#coPhone').value.trim();
    if(!n)return alert('Please enter your name');if(!p)return alert('Please enter your mobile number');
    e.target.disabled=true;e.target.textContent='Placing order…';
-   const{error}=await sb.rpc('place_order',{t:T,n,p,nt:ov.querySelector('#coNote').value.trim(),its:Object.values(cart).map(c=>({id:c.id,size:c.size,qty:c.q}))});
+   const its=Object.values(cart).map(c=>({id:c.id,size:c.size,qty:c.q})).concat(customItems.map(c=>({custom:true,name:c.name,qty:c.q})));
+   const{error}=await sb.rpc('place_order',{t:T,n,p,nt:ov.querySelector('#coNote').value.trim(),its});
    if(error){e.target.disabled=false;e.target.textContent='Place order';return alert(/closed/.test(error.message)?"We're not taking online orders right now — please check back soon.":/busy/.test(error.message)?'Too many pending orders for this table. Please call our staff.':'Could not place the order. Please try again or call our staff.')}
-   for(const k in cart)delete cart[k];ov.remove();drawMenu();drawCartBar();
+   for(const k in cart)delete cart[k];customItems.length=0;ov.remove();drawMenu();drawCustom();drawCartBar();
    const ok=document.createElement('div');ok.className='sheet-ov';ok.innerHTML='<div class=sheet style="text-align:center"><h3>✅ Order sent!</h3><p>Thank you '+esc(n)+'. Our staff will confirm it shortly.</p><button class=cta id=okClose>Order more</button></div>';document.body.append(ok);ok.onclick=e=>{if(e.target===ok||e.target.id=='okClose')ok.remove()}
   };
  }
